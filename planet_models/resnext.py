@@ -9,8 +9,26 @@ from torch.nn import functional as F
 
 class Bottleneck(Module):
     """Type C in the paper"""
-    def __init__(self, width, planes, cardinality, downsample=None, activation_fn=ELU):
+    def __init__(self, inplanes, planes, cardinality, stride, downsample=None, activation_fn=ELU):
+        """
+        Parameters:
+            inplanes: # of input channels
+            planes: # of output channels
+            cardinality: # of convolution groups
+            stride: convolution stride
+            downsample: convolution operation to increase the width of the output
+            activation_fn: activation function
+        """
         super(Bottleneck, self).__init__()
+        depth = planes/2
+        self.conv1 = Conv2d(inplanes, depth, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn1 = BatchNorm2d(planes/2)
+        # group convolution
+        self.conv2 = Conv2d(depth, depth, kernel_size=3, groups=cardinality, stride=stride, padding=1, bias=False)
+        self.bn2 = BatchNorm2d(planes/2)
+        # increase depth
+        self.conv3 = Conv2d(planes/2, planes, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn3 = BatchNorm2d(planes)
 
     def forward(self, x):
         pass

@@ -75,8 +75,11 @@ def optimize_threshold(model, mode_dir, resolution=10000):
     """
     model = nn.DataParallel(model)
     model.load_state_dict(torch.load(mode_dir))
-    model.cuda(0)
-    data = validation_jpg_loader(256, transform=input_transform(227))
+    model.cuda()
+    data = validation_jpg_loader(256, transform=Compose([
+        Scale(224),
+        ToTensor()
+    ]))
     num_class = 17
     pred = []
     targets = []
@@ -130,9 +133,9 @@ class Logger(object):
         plt.plot(np.arange(len(eval_loss)), eval_loss, color='blue', label='eval_loss')
         plt.legend(loc='best')
 
-        plt.savefig('log/%s_losses.jpg' % self.name)
+        plt.savefig('../log/%s_losses.jpg' % self.name)
 
         plt.figure()
         plt.plot(np.arange(len(f2_scores)), f2_scores)
-        plt.savefig('log/%s_fcscore.jpg' % self.name)
+        plt.savefig('../log/%s_fcscore.jpg' % self.name)
 

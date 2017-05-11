@@ -32,6 +32,20 @@ def train_resnet_forest(epoch=50):
     best_loss = np.inf
     patience = 0
     for i in range(epoch):
+        # training
+        for batch_index, (target_x, target_y) in enumerate(train_data_set):
+            if is_cuda_availible:
+                target_x, target_y = target_x.cuda(), target_y.cuda()
+            resnet.train()
+            target_x, target_y = Variable(target_x), Variable(target_y)
+            optimizer.zero_grad()
+            output = resnet(target_x)
+            loss = criterion(output, target_y)
+            loss.backward()
+            optimizer.step()
+
+        print('Finished epoch {}'.format(i))
+
         # evaluating
         val_loss = 0.0
         f2_scores = 0.0
@@ -62,20 +76,6 @@ def train_resnet_forest(epoch=50):
         logger.add_record('train_loss', loss.data[0])
         logger.add_record('evaluation_loss', val_loss.data[0]/batch_index)
         logger.add_record('f2_score', f2_scores/batch_index)
-
-        # training
-        for batch_index, (target_x, target_y) in enumerate(train_data_set):
-            if is_cuda_availible:
-                target_x, target_y = target_x.cuda(), target_y.cuda()
-            resnet.train()
-            target_x, target_y = Variable(target_x), Variable(target_y)
-            optimizer.zero_grad()
-            output = resnet(target_x)
-            loss = criterion(output, target_y)
-            loss.backward()
-            optimizer.step()
-
-        print('Finished epoch {}'.format(i))
     logger.save()
     logger.save_plot()
 
