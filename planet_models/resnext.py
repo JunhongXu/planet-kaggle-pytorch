@@ -4,13 +4,13 @@
 """
 import torch
 from torch.nn import *
-from torch.nn import functional as F
+from torch.autograd import Variable
 
 
 class Bottleneck(Module):
     expansion = 4
     """Type C in the paper"""
-    def __init__(self, inplanes, planes, width, cardinality, stride, downsample=None, activation_fn=ELU):
+    def __init__(self, inplanes, planes, width, cardinality, stride=1, downsample=None, activation_fn=ELU(inplace=True)):
         """
         Params:
             inplanes: # of input channels
@@ -38,15 +38,16 @@ class Bottleneck(Module):
 
     def forward(self, x):
         residual = x
+
         # reduce width
         out = self.conv1(x)
         out = self.bn1(out)
-        out = self.activation(out, inplace=True)
+        out = self.activation(out)
 
         # group conv
         out = self.conv2(out)
         out = self.bn2(out)
-        out = self.activation(out, inplace=True)
+        out = self.activation(out)
 
         # increase width
         out = self.conv3(out)
@@ -57,24 +58,24 @@ class Bottleneck(Module):
             residual = self.downsample(residual)
 
         out += residual
-        out = self.activation(out, inplace=True)
+        out = self.activation(out)
         return out
 
 
 class ResNeXT(Module):
-    def __init__(self, block, depths, num_classes, cardinality=32, activation_fn=ELU):
+    def __init__(self, block, depths, width, num_classes, cardinality=32, activation_fn=ELU(inplace=True)):
         super(ResNeXT, self).__init__()
         self.inplanes = 64
         self.cardinality = cardinality
-        self.widen_factor = self.inplanes * block.expansion // self.cardinality
+        self.width = width
         self.conv1 = Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = BatchNorm2d(64)
-        self.activation = activation_fn(inplace=True)
+        self.activation = activation_fn
         self.maxpool = MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.stage1 = self._make_layers(block, 64, 'stage1', depths[0])
-        self.stage2 = self._make_layers(block, 128, 'stage2', depths[1], stride=2)
-        self.stage3 = self._make_layers(block, 256, 'stage3', depths[2], stride=2)
-        self.stage4 = self._make_layers(block, 512, 'stage4', depths[3], stride=2)
+        self.stage1 = self._make_layers(block, 256, 'stage1', depths[0])
+        self.stage2 = self._make_layers(block, 512, 'stage2', depths[1], stride=2)
+        self.stage3 = self._make_layers(block, 1024, 'stage3', depths[2], stride=2)
+        self.stage4 = self._make_layers(block, 2048, 'stage4', depths[3], stride=2)
         self.avgpool = AvgPool2d(7)
         self.fc = Linear(block.expansion*512, num_classes)
 
@@ -82,7 +83,7 @@ class ResNeXT(Module):
         """
         Params
             block: type of the ResNeXT block
-            planes: input channels
+            planes: output channels
             blocks: number of residual blocks in this stage
             name: name of this stage
             stride: stride for the first residual block of each stage
@@ -90,27 +91,45 @@ class ResNeXT(Module):
             A sequential module representing the stage
         """
         downsample = None
-        if stride != 1 or self.inplanes != planes * block.expansion:
+        if stride != 1 or self.inplanes != planes:
             downsample = Sequential(
-                Conv2d(self.inplanes, planes * block.expansion, kernel_size=1, stride=stride, padding=0, bias=False),
-                BatchNorm2d(planes * block.expansion)
+                Conv2d(self.inplanes, planes, kernel_size=1, stride=stride, padding=0, bias=False),
+                BatchNorm2d(planes)
             )
 
         stage = Sequential()
+        # first residual block uses projection
         stage.add_module('{}_block1'.format(name), block(self.inplanes, planes,  self.width, self.cardinality, stride,
                                                          downsample, self.activation))
-        self.inplanes = planes * block.expansion
+        self.inplanes = planes
         for i in range(1, blocks):
             stage.add_module('{}_block{}'.format(name, i+1), block(self.inplanes, planes, self.width, self.cardinality,
-                                                                 stride, activation_fn=self.activation))
-        print(self.width, planes)
-        self.width = self.cardinality * block.expansion // planes
+                                                                   activation_fn=self.activation))
+        self.width *= 2
         return stage
 
     def forward(self, x):
-        pass
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.activation(out)
+        out = self.maxpool(out)
+        out = self.stage1(out)
+        out = self.stage2(out)
+        out = self.stage3(out)
+        out = self.stage4(out)
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.fc(out)
+        return out
+
+
+def resnext_29(num_labels=17):
+    return ResNeXT(Bottleneck, [2, 3, 4, 2], 4, num_labels)
 
 
 if __name__ == '__main__':
-    model = ResNeXT(Bottleneck, [2, 3, 2, 3], 10)
-    print(model)
+
+    model = DataParallel(resnext_29().cuda())
+    for i in range(0, 100):
+        x = Variable(torch.randn(128, 3, 224, 224).cuda())
+        print(model(x).size())
