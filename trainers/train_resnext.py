@@ -16,7 +16,7 @@ def train_resnet_forest(epoch=50):
     optimizer = optim.Adam(lr=1e-4, params=resnet.parameters(), weight_decay=1e-4)
     resnet.cuda()
     resnet = torch.nn.DataParallel(resnet, device_ids=[0, 1])
-    train_data_set = train_jpg_loader(128, transform=Compose(
+    train_data_set = train_jpg_loader(256, transform=Compose(
         [
             RandomHorizontalFlip(),
             RandomCrop(224),
@@ -65,12 +65,11 @@ def train_resnet_forest(epoch=50):
             print('Saving model...')
             print('Best loss {}, previous loss {}'.format(best_loss, val_loss))
             best_loss = val_loss
-            torch.save(resnet.state_dict(), '../models/{}pth'.format(resnext_name))
+            torch.save(resnet.state_dict(), '../models/{}.pth'.format(resnext_name))
             patience = 0
         else:
-            print('Reload previous model')
             patience += 1
-            resnet.load_state_dict(torch.load('../models/resnext-32.pth'))
+            print('Patience: {}'.format(patience))
 
         if patience >= 5:
             print('Early stopping!')
