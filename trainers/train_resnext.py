@@ -1,7 +1,7 @@
 from torch.nn import *
 from util import *
 from torch import optim
-from planet_models.resnext import resnext_29
+from planet_models.resnext import *
 from datasets import *
 import torch
 
@@ -11,8 +11,8 @@ is_cuda_availible = torch.cuda.is_available()
 
 def train_resnet_forest(epoch=50):
     criterion = MultiLabelSoftMarginLoss()
-    resnet = resnext_29()
-    logger = Logger('../log/', 'resnext-32')
+    resnet = resnext_35()
+    logger = Logger('../log/', 'resnext-35')
     optimizer = optim.Adam(lr=1e-4, params=resnet.parameters(), weight_decay=1e-4)
     resnet.cuda()
     resnet = torch.nn.DataParallel(resnet, device_ids=[0, 1])
@@ -66,6 +66,7 @@ def train_resnet_forest(epoch=50):
             print('Best loss {}, previous loss {}'.format(best_loss, val_loss))
             best_loss = val_loss
             torch.save(resnet.state_dict(), '../models/resnext-32.pth')
+            patience = 0
         else:
             print('Reload previous model')
             patience += 1
@@ -85,5 +86,5 @@ def train_resnet_forest(epoch=50):
 
 
 if __name__ == '__main__':
-    train_resnet_forest(epoch=85)
+    train_resnet_forest(epoch=150)
 

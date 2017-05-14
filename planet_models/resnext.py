@@ -123,8 +123,12 @@ class ResNeXT(Module):
         return out
 
 
-def resnext_29(num_labels=17):
+def resnext_35(num_labels=17):
     return ResNeXT(Bottleneck, [2, 3, 4, 2], 4, num_labels)
+
+
+def resnext_29(num_labels=17):
+    return ResNeXT(Bottleneck, [2, 2, 3, 2], 4, num_labels)
 
 
 if __name__ == '__main__':
