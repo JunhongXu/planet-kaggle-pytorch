@@ -131,9 +131,5 @@ def resnext_29(num_labels=17):
     return ResNeXT(Bottleneck, [2, 2, 3, 2], 4, num_labels)
 
 
-if __name__ == '__main__':
-
-    model = DataParallel(resnext_29().cuda())
-    for i in range(0, 100):
-        x = Variable(torch.randn(128, 3, 224, 224).cuda())
-        print(model(x).size())
+def resnext_11(num_labels=17):
+    return ResNeXT(Bottleneck, [1, 1, 1, 1], 4, num_labels)
