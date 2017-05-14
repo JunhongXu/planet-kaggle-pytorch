@@ -4,7 +4,7 @@ import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import *
 from labels import *
-from skimage.external.tifffile import *
+from skimage import io
 
 
 def is_image_file(filename):
@@ -12,11 +12,16 @@ def is_image_file(filename):
 
 
 def load_img(filepath):
+    """
+        This function reads two types of image:
+            1. If it is a .jpg, it uses PIL to open and read.
+            2. If it is a .tif, it uses tifffile to open it.
+    """
     if is_image_file(filepath):
         image = Image.open(filepath)
         image = image.convert('RGB')
     elif '.tif' in filepath:
-        image = imread(filepath)
+        image = io.imread(filepath)
     else:
         raise OSError('File is not either a .tif file or an image file.')
     return image

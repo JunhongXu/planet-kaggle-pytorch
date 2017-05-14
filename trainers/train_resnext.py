@@ -68,9 +68,8 @@ def train_resnet_forest(epoch=50):
             torch.save(resnet.state_dict(), '../models/{}pth'.format(resnext_name))
             patience = 0
         else:
-            print('Reload previous model')
             patience += 1
-            resnet.load_state_dict(torch.load('../models/resnext-32.pth'))
+            print('Patience: {}'.format(patience))
 
         if patience >= 5:
             print('Early stopping!')
