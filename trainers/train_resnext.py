@@ -5,18 +5,18 @@ from planet_models.resnext import *
 from datasets import *
 import torch
 
-resnext_name = 'resnext_11'
+resnext_name = 'resnext_35'
 is_cuda_availible = torch.cuda.is_available()
 
 
 def train_resnet_forest(epoch=50):
     criterion = MultiLabelSoftMarginLoss()
     resnet = globals()[resnext_name]()
-    logger = Logger('../log/%s', resnext_name)
-    optimizer = optim.Adam(lr=1e-4, params=resnet.parameters(), weight_decay=1e-4)
+    logger = Logger('../log/', resnext_name)
+    optimizer = optim.Adam(lr=1e-4, params=resnet.parameters(), weight_decay=9e-4)
     resnet.cuda()
     resnet = torch.nn.DataParallel(resnet, device_ids=[0, 1])
-    train_data_set = train_jpg_loader(256, transform=Compose(
+    train_data_set = train_jpg_loader(128, transform=Compose(
         [
             RandomHorizontalFlip(),
             RandomCrop(224),
@@ -63,15 +63,15 @@ def train_resnet_forest(epoch=50):
         val_loss = val_loss.data[0]/batch_index
         if best_loss > val_loss:
             print('Saving model...')
-            print('Best loss {}, previous loss {}'.format(best_loss, val_loss))
             best_loss = val_loss
             torch.save(resnet.state_dict(), '../models/{}.pth'.format(resnext_name))
             patience = 0
         else:
             patience += 1
             print('Patience: {}'.format(patience))
+            print('Best loss {}, previous loss {}'.format(best_loss, val_loss))
 
-        if patience >= 5:
+        if patience >= 10:
             print('Early stopping!')
             break
 

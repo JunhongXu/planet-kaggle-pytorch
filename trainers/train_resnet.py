@@ -1,19 +1,21 @@
 from torch.nn import *
 from util import *
 from torch import optim
-from planet_models.resnet_planet import resnet50_planet, resnet101_planet, resnet152_planet, resnet34_planet
+from planet_models.resnet_planet import resnet50_planet, resnet101_planet, resnet152_planet, \
+    resnet34_planet, resnet18_planet
 from datasets import *
 import torch
 
 
+resnet_name = 'resnet18_planet'
 is_cuda_availible = torch.cuda.is_available()
 
 
 def train_resnet_forest(epoch=50):
     criterion = MultiLabelSoftMarginLoss()
-    resnet = resnet34_planet()
-    logger = Logger('../log/', 'resnet-34')
-    optimizer = optim.Adam(lr=1e-4, params=resnet.parameters(), weight_decay=1e-4)
+    resnet = globals()[resnet_name]()
+    logger = Logger('../log/', resnet_name)
+    optimizer = optim.Adam(lr=1e-4, params=resnet.parameters(), weight_decay=5e-4)
     resnet.cuda()
     resnet = torch.nn.DataParallel(resnet, device_ids=[0, 1])
     train_data_set = train_jpg_loader(256, transform=Compose(
@@ -43,7 +45,8 @@ def train_resnet_forest(epoch=50):
             loss = criterion(output, target_y)
             loss.backward()
             optimizer.step()
-
+            if batch_index % 50 == 0:
+                print('Training loss is {}'.format(loss.data[0]))
         print('Finished epoch {}'.format(i))
 
         # evaluating
@@ -59,22 +62,25 @@ def train_resnet_forest(epoch=50):
             binary_y = threshold_labels(val_output.data.cpu().numpy())
             f2 = f2_score(val_y.data.cpu().numpy(), binary_y)
             f2_scores += f2
+        val_loss = val_loss.data[0]/batch_index
         if best_loss > val_loss:
+            print('Saving model...')
             best_loss = val_loss
-            torch.save(resnet.state_dict(), '../models/resnet-34.pth')
+            torch.save(resnet.state_dict(), '../models/{}.pth'.format(resnet_name))
+            patience = 0
         else:
-            print('Reload previous model')
             patience += 1
-            resnet.load_state_dict(torch.load('../models/resnet-34.pth'))
+            print('Patience: {}'.format(patience))
+            print('Best loss {}, previous loss {}'.format(best_loss, val_loss))
 
-        if patience >= 5:
+        if patience >= 20:
             print('Early stopping!')
             break
 
-        print('Evaluation loss is {}, Training loss is {}'.format(val_loss.data[0]/batch_index, loss.data[0]))
+        print('Evaluation loss is {}, Training loss is {}'.format(val_loss, loss.data[0]))
         print('F2 Score is %s' % (f2_scores/batch_index))
         logger.add_record('train_loss', loss.data[0])
-        logger.add_record('evaluation_loss', val_loss.data[0]/batch_index)
+        logger.add_record('evaluation_loss', val_loss)
         logger.add_record('f2_score', f2_scores/batch_index)
     logger.save()
     logger.save_plot()

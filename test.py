@@ -12,7 +12,7 @@ from planet_models.simplenet import MultiLabelCNN
 from planet_models.resnet_planet import *
 from trainers.train_simplenet import evaluate
 
-MODEL='models/resnext-32.pth'
+MODEL='models/resnet18_planet.pth'
 
 
 def test(model_dir, transform):
@@ -25,7 +25,7 @@ def test(model_dir, transform):
     ))
 
     if 'resnet' in model_dir:
-        model = nn.DataParallel(resnet34_planet())
+        model = nn.DataParallel(resnet18_planet())
     elif 'resnext' in model_dir:
         model = nn.DataParallel(resnext_29())
     else:

@@ -5,7 +5,7 @@
 import torch
 from torch.nn import *
 from torch.autograd import Variable
-
+from torch.nn.init import kaiming_normal
 
 class Bottleneck(Module):
     expansion = 4
@@ -78,6 +78,14 @@ class ResNeXT(Module):
         self.stage4 = self._make_layers(block, 2048, 'stage4', depths[3], stride=2)
         self.avgpool = AvgPool2d(7)
         self.fc = Linear(block.expansion*512, num_classes)
+
+        # initialize parameters
+        for m in self.modules():
+            if isinstance(m, Conv2d):
+                kaiming_normal(m.weight.data, mode='fan_out')
+            elif isinstance(m, BatchNorm2d):
+                m.weight.data.fill_(1.)
+                m.bias.data.zero_()
 
     def _make_layers(self, block, planes, name, blocks, stride=1):
         """

@@ -1,4 +1,4 @@
-from torchvision.models import resnet34, resnet50, resnet101, resnet152
+from torchvision.models import resnet34, resnet50, resnet101, resnet152, resnet18
 
 
 def resnet34_planet():
@@ -14,5 +14,9 @@ def resnet50_planet():
 
 
 def resnet152_planet():
-    resnet152(pretrained=False, num_classes=17)
+    return resnet152(pretrained=False, num_classes=17)
+
+
+def resnet18_planet():
+    return resnet18(pretrained=False, num_classes=17)
 
