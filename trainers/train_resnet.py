@@ -2,12 +2,12 @@ from torch.nn import *
 from util import *
 from torch import optim
 from planet_models.resnet_planet import resnet50_planet, resnet101_planet, resnet152_planet, \
-    resnet34_planet, resnet18_planet
+    resnet34_planet, resnet18_planet, resnet14_planet
 from datasets import *
 import torch
 
 
-resnet_name = 'resnet18_planet'
+resnet_name = 'resnet14_planet'
 is_cuda_availible = torch.cuda.is_available()
 
 
