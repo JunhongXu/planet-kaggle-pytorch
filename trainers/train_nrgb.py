@@ -6,7 +6,7 @@ from datasets import *
 import torch
 
 
-resnet_name = 'resnet14_planet'
+resnet_name = 'resnet14_nrgb'
 is_cuda_availible = torch.cuda.is_available()
 
 
