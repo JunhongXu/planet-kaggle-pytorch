@@ -5,10 +5,28 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import *
 from labels import *
 from skimage import io
+from spectral import *
+from sklearn.preprocessing import MinMaxScaler
 
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in ['.png', 'jpg', '.jpeg'])
+
+
+def calc_ndwi(image):
+    """
+    calculate normalized difference water index
+    input image is of the format(NIR, R, G)
+    """
+    return (image[:, :, 2] - image[:, :, 0]) / (image[:, :, 2] + image[:, :, 0])
+
+
+def scale(img):
+    rescaleIMG = np.reshape(img, (-1, 1))
+    scaler = MinMaxScaler(feature_range=(0, 255))
+    rescaleIMG = scaler.fit_transform(rescaleIMG) # .astype(np.float32)
+    img_scaled = (np.reshape(rescaleIMG, img.shape))
+    return img_scaled
 
 
 def load_img(filepath):
@@ -21,7 +39,16 @@ def load_img(filepath):
         image = Image.open(filepath)
         image = image.convert('RGB')
     elif '.tif' in filepath:
-        image = io.imread(filepath)
+        tif_image = io.imread(filepath)
+        image = np.empty_like(tif_image)
+        # RGB image
+        rgb = scale(get_rgb(tif_image, (2, 1, 0)))
+        # NIR-R-G image
+        nrg = get_rgb(tif_image, (3, 2, 1))
+        ndwi = calc_ndwi(nrg)
+        image[:, :, :3] = rgb
+        image[:, :, -1] = ndwi * 255.0
+        image = Image.fromarray(image.astype('uint8'))
     else:
         raise OSError('File is not either a .tif file or an image file.')
     return image
