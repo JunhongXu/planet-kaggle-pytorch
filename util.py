@@ -8,6 +8,8 @@ import pandas as pds
 from datasets import *
 import torch
 import os
+import glob
+from skimage import io, transform
 
 
 def evaluate(model, image):

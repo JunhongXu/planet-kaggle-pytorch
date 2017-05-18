@@ -1,7 +1,7 @@
 from torch.nn import *
 from util import *
 from torch import optim
-from planet_models.resnet_planet import resnet14_planet
+from planet_models.resnet_planet import resnet14_nrgb
 from datasets import *
 import torch
 
@@ -24,7 +24,7 @@ def train_resnet_forest(epoch=50):
             ToTensor()
         ]
     ))
-    validation_data_set = validation_jpg_loader(64, transform=Compose(
+    validation_data_set = validation_tif_loader(64, transform=Compose(
         [
             Scale(224),
             ToTensor()

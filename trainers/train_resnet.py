@@ -2,7 +2,7 @@ from torch.nn import *
 from util import *
 from torch import optim
 from planet_models.resnet_planet import resnet50_planet, resnet101_planet, resnet152_planet, \
-    resnet34_planet, resnet18_planet, resnet14_planet
+    resnet34_planet, resnet18_planet, resnet14_planet, resnet10_planet
 from datasets import *
 import torch
 
@@ -21,14 +21,17 @@ def train_resnet_forest(epoch=50):
     train_data_set = train_jpg_loader(256, transform=Compose(
         [
             RandomHorizontalFlip(),
+            Scale(256),
             RandomCrop(224),
-            ToTensor()
+            ToTensor(),
+            Normalize(mean, std)
         ]
     ))
     validation_data_set = validation_jpg_loader(64, transform=Compose(
         [
             Scale(224),
-            ToTensor()
+            ToTensor(),
+            Normalize(mean, std)
          ]
     ))
     best_loss = np.inf

@@ -4,9 +4,13 @@ import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import *
 from labels import *
-from skimage import io
 from spectral import *
+import numpy as np
+from skimage import io
 from sklearn.preprocessing import MinMaxScaler
+
+mean = [0.31151703, 0.34061992, 0.29885209]
+std = [0.16730586, 0.14391145, 0.13747531]
 
 
 def is_image_file(filename):
@@ -18,7 +22,7 @@ def calc_ndwi(image):
     calculate normalized difference water index
     input image is of the format(NIR, R, G)
     """
-    return (image[:, :, 2] - image[:, :, 0]) / (image[:, :, 2] + image[:, :, 0])
+    return (image[:, :, 2] - image[:, :, 0]) / (image[:, :, 2] + image[:, :, 0] + 1e-8)
 
 
 def scale(img):
@@ -35,12 +39,14 @@ def load_img(filepath):
             1. If it is a .jpg, it uses PIL to open and read.
             2. If it is a .tif, it uses tifffile to open it.
     """
+    np.seterr(all='warn')
+
     if is_image_file(filepath):
         image = Image.open(filepath)
         image = image.convert('RGB')
     elif '.tif' in filepath:
         tif_image = io.imread(filepath)
-        image = np.empty_like(tif_image)
+        image = np.empty_like(tif_image).astype(np.int32)
         # RGB image
         rgb = scale(get_rgb(tif_image, (2, 1, 0)))
         # NIR-R-G image
@@ -101,6 +107,16 @@ class PlanetDataSet(Dataset):
         self.input_transform = input_transform
         self.target_transform = target_transform
 
+    def mean_std(self):
+        mean = []
+        std = []
+        images = np.stack([np.asarray(image) for image in self.images]).astype(np.float32)
+        for i in range(0, 4 if self.tif else 3):
+            images[:, :, :, i] = images[:, :, :, i]/255.
+            mean.append(images[:, :, :, i].mean())
+            std.append(images[:, :, :, i].std())
+        return mean, std
+
     def __getitem__(self, index):
         if self.mode == 'Test':
             image = load_img(self.image_filenames[index])
@@ -124,7 +140,7 @@ class PlanetDataSet(Dataset):
 
 def train_tif_loader(batch_size=64, transform=ToTensor()):
     dataset = PlanetDataSet(
-        '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train-tif',
+        '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train-tif-v2',
         '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train.csv',
         mode='Train',
         input_transform=transform,
@@ -135,7 +151,7 @@ def train_tif_loader(batch_size=64, transform=ToTensor()):
 
 def validation_tif_loader(batch_size=64, transform=ToTensor()):
     dataset = PlanetDataSet(
-        '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train-tif',
+        '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train-tif-v2',
         '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train.csv',
         mode='Validation',
         input_transform=transform,
@@ -183,3 +199,8 @@ def test_jpg_loader(batch_size=128, transform=ToTensor()):
     return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True)
 
 
+if __name__ == '__main__':
+    dd = PlanetDataSet(        '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train-jpg',
+        '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train.csv',
+        mode='Train')
+    print(dd.mean_std())

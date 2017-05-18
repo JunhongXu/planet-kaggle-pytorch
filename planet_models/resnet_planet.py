@@ -24,23 +24,35 @@ def resnet18_planet():
 
 
 def resnet14_planet():
-    resnet = NRGBResnet(BasicBlock, [1, 2, 2, 1], num_classes=17)
+    resnet = ResNet(BasicBlock, [1, 2, 2, 1], num_classes=17)
     return resnet
 
 
-class NRGBResnet(nn.Module):
-    def __init__(self, block, layers, num_classes=1000):
+def resnet10_planet():
+    return CustomizedResNet(BasicBlock, [1, 1, 1, 1], num_classes=17)
+
+
+def resnet14_nrgb():
+    resnet = CustomizedResNet(BasicBlock, [1, 2, 2, 1], num_channels=4, num_classes=17)
+    return resnet
+
+
+class CustomizedResNet(nn.Module):
+    def __init__(self, block, layers, num_channels=3, num_classes=1000):
         self.inplanes = 64
-        super(NRGBResnet, self).__init__()
-        self.conv1 = nn.Conv2d(4, 64, kernel_size=7, stride=2, padding=3,
+        super(CustomizedResNet, self).__init__()
+        self.conv1 = nn.Conv2d(num_channels, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        self.layer1 = self._make_layer(block, 128, layers[0])
+        self.dropout1 = nn.Dropout2d(p=0.3)
+        self.layer2 = self._make_layer(block, 256, layers[1], stride=2)
+        self.dropout2 = nn.Dropout2d(p=0.3)
+        self.layer3 = self._make_layer(block, 512, layers[2], stride=2)
+        self.dropout3 = nn.Dropout2d(p=0.3)
+        # self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(7)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
@@ -74,11 +86,13 @@ class NRGBResnet(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
-
         x = self.layer1(x)
+        x = self.dropout1(x)
         x = self.layer2(x)
+        x = self.dropout2(x)
         x = self.layer3(x)
-        x = self.layer4(x)
+        x = self.dropout3(x)
+        # x = self.layer4(x)
 
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)

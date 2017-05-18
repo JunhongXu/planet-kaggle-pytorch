@@ -6,7 +6,7 @@ from torch.nn import functional as F
 from torchvision.transforms import *
 from planet_models.resnext import resnext_29
 from datasets import input_transform
-from datasets import test_jpg_loader
+from datasets import test_jpg_loader, mean, std
 from labels import *
 from planet_models.simplenet import MultiLabelCNN
 from planet_models.resnet_planet import *
@@ -20,8 +20,9 @@ def test(model_dir, transform):
     test_loader = test_jpg_loader(256, transform=Compose(
         [
             Scale(224),
-            ToTensor()
-         ]
+            ToTensor(),
+            Normalize(mean, std)
+        ]
     ))
 
     if 'resnet' in model_dir:
@@ -41,7 +42,7 @@ def test(model_dir, transform):
         result = F.sigmoid(result)
         result = result.data.cpu().numpy()
         for r, id in zip(result, im_ids):
-            r = np.where(r >= 0.2)[0]
+            r = np.where(r >= 0.15)[0]
             labels = [idx_to_label[index] for index in r]
             imid_to_label[id] = sorted(labels)
         print('Batch Index {}'.format(batch_idx))
