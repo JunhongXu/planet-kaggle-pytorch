@@ -8,17 +8,17 @@ class Block(nn.Module):
         self.conv1 = nn.Conv2d(in_channels=inpt_channel, kernel_size=1, out_channels=output_channel//2, bias=False,
                                stride=1)
         self.bn1 = nn.BatchNorm2d(output_channel//2)
-        self.elu1 = nn.ELU(inplace=True)
+        self.elu1 = nn.ELU()
 
         self.conv2 = nn.Conv2d(in_channels=output_channel//2, out_channels=output_channel//2, bias=False,
                                kernel_size=3, stride=1, padding=1)
         self.bn2 = nn.BatchNorm2d(output_channel//2)
-        self.elu2 = nn.ELU(inplace=True)
+        self.elu2 = nn.ELU()
 
         self.conv3 = nn.Conv2d(in_channels=output_channel//2, out_channels=output_channel, kernel_size=1, bias=False,
                                stride=1)
         self.bn3 = nn.BatchNorm2d(output_channel)
-        self.elu3 = nn.ELU(inplace=True)
+        self.elu3 = nn.ELU()
 
         self.stage = nn.Sequential(
             self.conv1, self.bn1, self.elu1,
@@ -61,13 +61,13 @@ class SimpleNetV2(nn.Module):
         # (2048, 2, 2)
         self.avg_pool5 = nn.AvgPool2d(2)
 
-        self.elu5 = nn.ELU(inplace=True)
+        self.elu5 = nn.ELU()
 
         self.classifier = nn.Sequential(
             nn.Linear(2048, 512, bias=False),
             nn.BatchNorm1d(512),
-            nn.ELU(inplace=True),
-            nn.Dropout(p=0.3, inplace=True),
+            nn.ELU(),
+            nn.Dropout(p=0.5),
             nn.Linear(512, 17)
         )
         for m in self.modules():

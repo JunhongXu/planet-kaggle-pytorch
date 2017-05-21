@@ -9,17 +9,19 @@ from datasets import input_transform
 from datasets import test_jpg_loader, mean, std
 from labels import *
 from planet_models.simplenet import MultiLabelCNN
+from planet_models.simplenet_v2 import SimpleNetV2
 from planet_models.resnet_planet import *
 from trainers.train_simplenet import evaluate
 
-MODEL='models/resnet14_planet.pth'
+
+MODEL='models/simplenet_v2.pth'
 
 
 def test(model_dir, transform):
     name = model_dir.split('/')[-1][:-4]
     test_loader = test_jpg_loader(256, transform=Compose(
         [
-            Scale(224),
+            Scale(72),
             ToTensor(),
             Normalize(mean, std)
         ]
@@ -30,7 +32,7 @@ def test(model_dir, transform):
     elif 'resnext' in model_dir:
         model = nn.DataParallel(resnext_29())
     else:
-        model = MultiLabelCNN(17)
+        model = nn.DataParallel(SimpleNetV2())
     model.load_state_dict(torch.load(model_dir))
     model.eval()
 
@@ -42,7 +44,7 @@ def test(model_dir, transform):
         result = F.sigmoid(result)
         result = result.data.cpu().numpy()
         for r, id in zip(result, im_ids):
-            r = np.where(r >= 0.15)[0]
+            r = np.where(r >= 0.2)[0]
             labels = [idx_to_label[index] for index in r]
             imid_to_label[id] = sorted(labels)
         print('Batch Index {}'.format(batch_idx))

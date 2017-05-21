@@ -14,13 +14,13 @@ def train_simplenet_v2_forest(epoch=50):
     criterion = MultiLabelSoftMarginLoss()
     net = SimpleNetV2()
     logger = Logger('../log/', name)
-    optimizer = optim.Adam(lr=1e-4, params=net.parameters(), weight_decay=5e-4)
+    optimizer = optim.Adam(lr=1e-4, params=net.parameters(), weight_decay=1e-5)
     net.cuda()
     resnet = torch.nn.DataParallel(net, device_ids=[0, 1])
     train_data_set = train_jpg_loader(256, transform=Compose(
         [
             RandomHorizontalFlip(),
-            Scale(100),
+            Scale(80),
             RandomCrop(72),
             ToTensor(),
             Normalize(mean, std)
@@ -68,19 +68,21 @@ def train_simplenet_v2_forest(epoch=50):
         if best_loss > val_loss:
             print('Saving model...')
             best_loss = val_loss
-            torch.save(resnet.state_dict(), '../models/{}.pth'.format(resnet_name))
+            torch.save(resnet.state_dict(), '../models/{}.pth'.format(name))
             patience = 0
         else:
             patience += 1
             print('Patience: {}'.format(patience))
             print('Best loss {}, previous loss {}'.format(best_loss, val_loss))
 
+        print('Evaluation loss is {}, Training loss is {}'.format(val_loss, loss.data[0]))
+        print('F2 Score is %s' % (f2_scores/batch_index))
+
         if patience >= 20:
             print('Early stopping!')
             break
 
-        print('Evaluation loss is {}, Training loss is {}'.format(val_loss, loss.data[0]))
-        print('F2 Score is %s' % (f2_scores/batch_index))
+
         logger.add_record('train_loss', loss.data[0])
         logger.add_record('evaluation_loss', val_loss)
         logger.add_record('f2_score', f2_scores/batch_index)
