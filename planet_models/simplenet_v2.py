@@ -36,7 +36,7 @@ class Block(nn.Module):
 
 
 class TransitionBlock(nn.Module):
-    def __init__(self, size, input_channel, output_channel=2048):
+    def __init__(self, size, input_channel, output_channel=1024):
         super(TransitionBlock, self).__init__()
         self.conv = nn.Conv2d(input_channel, output_channel, stride=1, kernel_size=1, bias=False)
         self.bn = nn.BatchNorm2d(output_channel)
@@ -68,7 +68,7 @@ class SimpleNetV2(nn.Module):
         self.maxpool_4 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.transition_2 = TransitionBlock(4, 1024)
         # (1024, 4, 4)
-        self.stage_4 = Block(inpt_channel=1024, output_channel=2048)
+        self.stage_4 = Block(inpt_channel=1024, output_channel=1024)
         self.avg_pool = nn.AvgPool2d(4)
         # (2048, 1, 1)
         self.classifier = nn.Sequential(
