@@ -26,9 +26,9 @@ class Block(nn.Module):
         self.dropout_3 = nn.Dropout2d()
 
         self.stage = nn.Sequential(
-            self.conv1, self.bn1, self.elu1, self.dropout_1,
-            self.conv2, self.bn2, self.elu2, self.dropout_2,
-            self.conv3, self.bn3, self.elu3, self.dropout_3
+            self.conv1, self.bn1, self.elu1,
+            self.conv2, self.bn2, self.elu2,
+            self.conv3, self.bn3, self.elu3
         )
 
     def forward(self, x):
