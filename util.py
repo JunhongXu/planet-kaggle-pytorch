@@ -9,7 +9,10 @@ from datasets import *
 import torch
 import os
 import glob
-from skimage import io, transform
+from planet_models.resnet_planet import resnet14_planet
+from planet_models.simplenet_v2 import SimpleNetV2
+
+BEST_THRESHOLD= [0.233, 0.065, 0.196, 0.315, 0.226, 0.202, 0.108, 0.185, 0.285, 0.14, 0.292, 0.238, 0.194, 0.35, 0.196, 0.145, 0.369]
 
 
 def evaluate(model, image):
@@ -70,45 +73,6 @@ def threshold_labels(y, threshold=0.2):
 def f2_score(y_true, y_pred):
     return fbeta_score(y_true, y_pred, beta=2, average='samples')
 
-
-def optimize_threshold(model, mode_dir, resolution=10000):
-    """
-    This function takes the validation set and find the best threshold for each class.
-    """
-    model = nn.DataParallel(model)
-    model.load_state_dict(torch.load(mode_dir))
-    model.cuda()
-    data = validation_jpg_loader(256, transform=Compose([
-        Scale(224),
-        ToTensor()
-    ]))
-    num_class = 17
-    pred = []
-    targets = []
-    # predict
-    for batch_index, (images, target) in enumerate(data):
-        output = evaluate(model, images)
-        output = F.sigmoid(output)
-        pred.append(output.data.cpu().numpy())
-        targets.append(target.cpu().numpy())
-    pred = np.vstack(pred)
-    targets = np.vstack(targets)
-    threshold = [0.1] * 17
-    # optimize
-    for i in range(num_class):
-        best_thresh = 0.0
-        best_score = 0.0
-        for r in range(resolution):
-            r /= resolution
-            threshold[i] = r
-            labels = threshold_labels(pred, threshold)
-            score = f2_score(targets, labels)
-            if score > best_score:
-                best_thresh = r
-                best_score = score
-        threshold[i] = best_thresh
-        print(i, best_score, best_thresh)
-    return threshold
 
 
 class Logger(object):

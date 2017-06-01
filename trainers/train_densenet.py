@@ -1,16 +1,15 @@
+from torchvision.models.densenet import DenseNet
+from datasets import train_jpg_loader, validation_jpg_loader
+import torch
+from torch.nn import functional as F
 from torch.nn import *
 from util import *
 from torch import optim
-from planet_models.simplenet_v2 import SimpleNetV2
-from PIL import Image
-import random
-from planet_models.simplenet_v3 import SimpleNetV3
-from datasets import *
-import torch
+from torchvision.transforms import *
+import torch.utils.model_zoo as model_zoo
+from torchvision.models.densenet import model_urls
 
-
-name = 'simplenet_v3.1'
-is_cuda_availible = torch.cuda.is_available()
+NAME = 'densenet121'
 
 
 class RandomVerticalFLip(object):
@@ -20,35 +19,44 @@ class RandomVerticalFLip(object):
         return img
 
 
-def adjust_lr(optimizer, rate):
-    for param_group in optimizer.param_groups:
-        if param_group['lr'] >= 1e-5:
-            param_group['lr'] = param_group['lr'] * rate
+def densenet121(num_classes=17, pretrained=False):
+    model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 24, 16), num_classes=num_classes)
+    if pretrained:
+        state_dict = model_zoo.load_url(model_urls[NAME])
+
+        model.load_state_dict(model_zoo.load_url(model_urls[NAME]))
+    return model
 
 
-def train_simplenet_v2_forest(epoch=50):
-    # try SGD instead of ADAM
+def lr_scheduler(optimizer, epoch):
+    if epoch % 10 == 0 and epoch != 0:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = param_group['lr'] * 0.1
+
+
+def train(epoch):
     criterion = MultiLabelSoftMarginLoss()
-    net = SimpleNetV3()
-    logger = Logger('../log/', name)
-    optimizer = optim.Adam(lr=5e-4, params=net.parameters())
+    net = densenet121()
+    logger = Logger('../log/', NAME)
+    # optimizer = optim.Adam(lr=5e-4, params=net.parameters())
+    optimizer = optim.Adam(lr=1e-4, params=net.parameters(), weight_decay=5e-5)
     net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
     # resnet.load_state_dict(torch.load('../models/simplenet_v3.pth'))
-    train_data_set = train_jpg_loader(256, transform=Compose(
+    train_data_set = train_jpg_loader(100, transform=Compose(
         [
 
-            Scale(77),
+            Scale(256),
             RandomHorizontalFlip(),
             RandomVerticalFLip(),
-            RandomCrop(72),
+            RandomCrop(224),
             ToTensor(),
             Normalize(mean, std)
         ]
     ))
     validation_data_set = validation_jpg_loader(64, transform=Compose(
         [
-            Scale(72),
+            Scale(256),
             ToTensor(),
             Normalize(mean, std)
          ]
@@ -57,9 +65,10 @@ def train_simplenet_v2_forest(epoch=50):
     patience = 0
     for i in range(epoch):
         # training
+        # lr_scheduler(optimizer, epoch)
         training_loss = 0.0
         for batch_index, (target_x, target_y) in enumerate(train_data_set):
-            if is_cuda_availible:
+            if torch.cuda.is_available():
                 target_x, target_y = target_x.cuda(), target_y.cuda()
             net.train()
             target_x, target_y = Variable(target_x), Variable(target_y)
@@ -79,7 +88,7 @@ def train_simplenet_v2_forest(epoch=50):
         preds = []
         targets = []
         for batch_index, (val_x, val_y) in enumerate(validation_data_set):
-            if is_cuda_availible:
+            if torch.cuda.is_available():
                 val_y = val_y.cuda()
             val_y = Variable(val_y, volatile=True)
             val_output = evaluate(net, val_x)
@@ -97,10 +106,9 @@ def train_simplenet_v2_forest(epoch=50):
         if best_loss > val_loss:
             print('Saving model...')
             best_loss = val_loss
-            torch.save(net.state_dict(), '../models/{}.pth'.format(name))
+            torch.save(net.state_dict(), '../models/{}.pth'.format(NAME))
             patience = 0
         else:
-            adjust_lr(optimizer, 0.8)
             patience += 1
             print('Patience: {}'.format(patience))
             print('Best loss {}, previous loss {}'.format(best_loss, val_loss))
@@ -120,5 +128,6 @@ def train_simplenet_v2_forest(epoch=50):
 
 
 if __name__ == '__main__':
-    train_simplenet_v2_forest(epoch=500)
+    train(200)
+
 

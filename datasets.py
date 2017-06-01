@@ -187,7 +187,7 @@ def validation_jpg_loader(batch_size=64, transform=ToTensor()):
         mode='Validation',
         input_transform=transform
     )
-    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True)
+    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
 
 def test_jpg_loader(batch_size=128, transform=ToTensor()):
@@ -196,7 +196,7 @@ def test_jpg_loader(batch_size=128, transform=ToTensor()):
         mode='Test',
         input_transform=transform
     )
-    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True)
+    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
 
 if __name__ == '__main__':
