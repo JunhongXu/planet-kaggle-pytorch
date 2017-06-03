@@ -1,15 +1,11 @@
-from torchvision.models.densenet import DenseNet
-from datasets import train_jpg_loader, validation_jpg_loader
-import torch
-from torch.nn import functional as F
 from torch.nn import *
 from util import *
 from torch import optim
 from torchvision.transforms import *
-import torch.utils.model_zoo as model_zoo
-from torchvision.models.densenet import model_urls
+from planet_models.densenet_planet import densenet121
 
-NAME = 'densenet121'
+
+NAME = 'pretrained_densenet121'
 
 
 class RandomVerticalFLip(object):
@@ -19,19 +15,12 @@ class RandomVerticalFLip(object):
         return img
 
 
-def densenet121(num_classes=17, pretrained=False):
-    model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 24, 16), num_classes=num_classes)
-    if pretrained:
-        state_dict = model_zoo.load_url(model_urls[NAME])
-
-        model.load_state_dict(model_zoo.load_url(model_urls[NAME]))
-    return model
-
-
-def lr_scheduler(optimizer, epoch):
-    if epoch % 10 == 0 and epoch != 0:
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = param_group['lr'] * 0.1
+def get_optimizer(model, lr=1e-4, weight_decay=1e-4):
+    params = [
+        {'params': model.features.parameters(), 'lr': lr},
+        {'params': model.classifier.parameters(), 'lr': lr * 10}
+    ]
+    return optim.Adam(params=params, weight_decay=weight_decay)
 
 
 def train(epoch):
@@ -39,7 +28,7 @@ def train(epoch):
     net = densenet121()
     logger = Logger('../log/', NAME)
     # optimizer = optim.Adam(lr=5e-4, params=net.parameters())
-    optimizer = optim.Adam(lr=1e-4, params=net.parameters(), weight_decay=5e-5)
+    optimizer = get_optimizer(net)
     net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
     # resnet.load_state_dict(torch.load('../models/simplenet_v3.pth'))

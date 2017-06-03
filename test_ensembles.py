@@ -11,7 +11,7 @@ from trainers.train_simplenet import evaluate
 
 
 SIMPLENET = 'models/simplenet_v3.1.pth'
-RESNET = 'models/densenet121.pth'
+RESNET = 'models/pretrained_densenet121.pth'
 
 def test():
     resnet = nn.DataParallel(densenet121().cuda())
@@ -22,7 +22,7 @@ def test():
     simple_v2.load_state_dict(torch.load(SIMPLENET))
     simple_v2.eval()
 
-    name = 'ensembles_simple_v3.1_densenet121'
+    name = 'ensembles_simple_v3.1_pretrained_densenet121'
     resnet_loader = test_jpg_loader(512, transform=Compose(
         [
             Scale(224),
