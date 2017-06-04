@@ -15,7 +15,7 @@ class RandomVerticalFLip(object):
         return img
 
 
-def get_optimizer(model, lr=1e-4, weight_decay=1e-4):
+def get_optimizer(model, lr=5e-5, weight_decay=5e-4):
     params = [
         {'params': model.features.parameters(), 'lr': lr},
         {'params': model.classifier.parameters(), 'lr': lr * 10}
@@ -32,7 +32,7 @@ def train(epoch):
     net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
     # resnet.load_state_dict(torch.load('../models/simplenet_v3.pth'))
-    train_data_set = train_jpg_loader(100, transform=Compose(
+    train_data_set = train_jpg_loader(90, transform=Compose(
         [
 
             Scale(256),
@@ -45,7 +45,7 @@ def train(epoch):
     ))
     validation_data_set = validation_jpg_loader(64, transform=Compose(
         [
-            Scale(256),
+            Scale(224),
             ToTensor(),
             Normalize(mean, std)
          ]

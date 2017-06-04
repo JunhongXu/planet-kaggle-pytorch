@@ -17,7 +17,7 @@ from trainers.train_simplenet import evaluate
 from util import BEST_THRESHOLD
 
 
-MODEL='models/densenet121.pth'
+MODEL='models/pretrained_densenet121.pth'
 
 
 def test(model_dir, transform):

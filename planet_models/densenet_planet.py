@@ -4,7 +4,8 @@ from torchvision.models import DenseNet
 
 
 def densenet121(num_classes=17, pretrained=False):
-    model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 24, 16), num_classes=num_classes)
+    model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 24, 16), drop_rate=0.2,
+                     num_classes=num_classes)
     if pretrained:
         # load model dictionary
         model_dict = model.state_dict()
