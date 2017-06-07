@@ -25,7 +25,7 @@ def get_optimizer(model, pretrained=True, lr=5e-5, weight_decay=5e-5):
 
 def train(epoch):
     criterion = MultiLabelSoftMarginLoss()
-    net = FPNet(Bottleneck, [2, 3, 3, 2])
+    net = FPNet(Bottleneck, [2, 4, 15, 2])
     logger = Logger('../log/', NAME)
     optimizer = get_optimizer(net, False, 1e-4, 5e-4)
     net.cuda()

@@ -91,9 +91,9 @@ class FPNet(nn.Module):
         self.f3 = nn.Sequential(_make_conv_bn_elu(1024, 256))                          # 4*4*256
 
         # reduce dimensionality before classifier 1*1*256
-        self.maxpool1 = nn.AdaptiveMaxPool2d(1)
-        self.maxpool2 = nn.AdaptiveMaxPool2d(1)
-        self.maxpool3 = nn.AdaptiveMaxPool2d(1)
+        self.pool1 = nn.AdaptiveAvgPool2d(1)
+        self.pool2 = nn.AdaptiveAvgPool2d(1)
+        self.pool3 = nn.AdaptiveAvgPool2d(1)
 
         # clasifier
         self.cls_1 = nn.Sequential(_make_linear_bn_elu(256, 512))
@@ -158,11 +158,11 @@ class FPNet(nn.Module):
         f3 = self.f3(m3)    # 2*2*256
 
         # max pool
-        f1 = self.maxpool1(f1)  # 256
+        f1 = self.pool1(f1)  # 256
         f1 = f1.view(f1.size(0), -1)
-        f2 = self.maxpool2(f2)  # 256
+        f2 = self.pool2(f2)  # 256
         f2 = f2.view(f2.size(0), -1)
-        f3 = self.maxpool3(f3)  # 256
+        f3 = self.pool3(f3)  # 256
         f3 = f3.view(f3.size(0), -1)
         # classifier
         cls1 = self.cls_1(f1)
