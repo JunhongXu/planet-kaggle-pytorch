@@ -4,13 +4,21 @@ from torch import optim
 from torchvision.transforms import *
 from planet_models.fpn import FPNet, Bottleneck
 
-NAME = 'fpnet62_wd_1e-4_sgd'
+NAME = 'fpnet62_wd_1e-4_adam_rotate'
 
 
 class RandomVerticalFLip(object):
     def __call__(self, img):
         if random.random() < 0.5:
             img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        return img
+
+
+class RandomRotate(object):
+    def __call__(self, img):
+        if random.random() < 0.5:
+            rotation = np.random.randint(1, 90)
+            img = img.rotate(rotation)
         return img
 
 
@@ -25,13 +33,13 @@ def get_optimizer(model, pretrained=True, lr=5e-5, weight_decay=5e-5):
 
 def lr_schedule(epoch, optimizer):
     if epoch < 10:
-        lr = 1e-1
+        lr = 5e-4
     elif 10 <= epoch <= 20:
-        lr = 5e-2
-    elif 25 < epoch <= 45:
-        lr = 5e-3
-    else:
         lr = 1e-4
+    elif 25 < epoch <= 45:
+        lr = 5e-5
+    else:
+        lr = 1e-5
 
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
@@ -39,10 +47,10 @@ def lr_schedule(epoch, optimizer):
 
 def train(epoch):
     criterion = MultiLabelSoftMarginLoss()
-    net = FPNet(Bottleneck, [2, 4, 10, 2], dropout_rate=0.4)
+    net = FPNet(Bottleneck, [2, 8, 10, 2], dropout_rate=0.4)
     logger = Logger('../log/', NAME)
     # optimizer = get_optimizer(net, False, 1e-4, 5e-4)
-    optimizer = optim.SGD(net.parameters(), lr=1e-1, weight_decay=1e-4, momentum=0.9)
+    optimizer = optim.Adam(net.parameters(), lr=5e-4, weight_decay=1e-4)
     net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
     train_data_set = train_jpg_loader(128, transform=Compose(
@@ -51,6 +59,7 @@ def train(epoch):
             Scale(77),
             RandomHorizontalFlip(),
             RandomVerticalFLip(),
+            RandomRotate(),
             RandomCrop(72),
             ToTensor(),
             Normalize(mean, std)
