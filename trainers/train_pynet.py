@@ -4,7 +4,7 @@ from torch import optim
 from torchvision.transforms import *
 from planet_models.fpn import FPNet, Bottleneck
 
-NAME = 'fpnet33_wd_5e-4'
+NAME = 'fpnet62_wd_1e-4_sgd'
 
 
 class RandomVerticalFLip(object):
@@ -23,11 +23,26 @@ def get_optimizer(model, pretrained=True, lr=5e-5, weight_decay=5e-5):
     return optim.Adam(params=params, lr=lr, weight_decay=weight_decay)
 
 
+def lr_schedule(epoch, optimizer):
+    if epoch < 10:
+        lr = 1e-1
+    elif 10 <= epoch <= 20:
+        lr = 5e-2
+    elif 25 < epoch <= 45:
+        lr = 1e-3
+    else:
+        lr = 1e-4
+
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
 def train(epoch):
     criterion = MultiLabelSoftMarginLoss()
-    net = FPNet(Bottleneck, [2, 4, 15, 2])
+    net = FPNet(Bottleneck, [2, 4, 10, 2], dropout_rate=0.4)
     logger = Logger('../log/', NAME)
-    optimizer = get_optimizer(net, False, 1e-4, 5e-4)
+    # optimizer = get_optimizer(net, False, 1e-4, 5e-4)
+    optimizer = optim.SGD(net.parameters(), lr=1e-1, weight_decay=1e-4, momentum=0.9)
     net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
     train_data_set = train_jpg_loader(128, transform=Compose(
@@ -53,6 +68,8 @@ def train(epoch):
     for i in range(epoch):
         # training
         training_loss = 0.0
+        # adjust learning rate
+        lr_schedule(epoch, optimizer)
         for batch_index, (target_x, target_y) in enumerate(train_data_set):
             if torch.cuda.is_available():
                 target_x, target_y = target_x.cuda(), target_y.cuda()
@@ -105,8 +122,10 @@ def train(epoch):
         logger.add_record('train_loss', training_loss)
         logger.add_record('evaluation_loss', val_loss)
         logger.add_record('f2_score', f2_scores)
-    logger.save()
-    logger.save_plot()
+
+        # save for every epoch
+        logger.save()
+        logger.save_plot()
 
 
 if __name__ == '__main__':

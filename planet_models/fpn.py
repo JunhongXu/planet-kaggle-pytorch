@@ -66,8 +66,9 @@ class Bottleneck(nn.Module):
 
 class FPNet(nn.Module):
 
-    def __init__(self, block, layers, input_channels=3, num_classes=17):
+    def __init__(self, block, layers, input_channels=3, num_classes=17, dropout_rate=0.2):
         self.inplanes = 32
+        self.dropout_rate = dropout_rate
         super(FPNet, self).__init__()
         self.conv1 = nn.Sequential(
             _make_conv_bn_elu(in_channels=input_channels, out_channels=32, kernel_size=3, stride=2, padding=0)
@@ -96,9 +97,9 @@ class FPNet(nn.Module):
         self.pool3 = nn.AdaptiveAvgPool2d(1)
 
         # clasifier
-        self.cls_1 = nn.Sequential(_make_linear_bn_elu(256, 512))
-        self.cls_2 = nn.Sequential(_make_linear_bn_elu(256, 512))
-        self.cls_3 = nn.Sequential(_make_linear_bn_elu(256, 512))
+        self.cls_1 = nn.Sequential(_make_linear_bn_elu(256, 512, dropout_rate=self.dropout_rate))
+        self.cls_2 = nn.Sequential(_make_linear_bn_elu(256, 512, dropout_rate=self.dropout_rate))
+        self.cls_3 = nn.Sequential(_make_linear_bn_elu(256, 512, dropout_rate=self.dropout_rate))
 
         # final prediction
         self.fc = nn.Linear(512*3, num_classes)
