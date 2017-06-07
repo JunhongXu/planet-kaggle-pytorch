@@ -29,7 +29,7 @@ def lr_schedule(epoch, optimizer):
     elif 10 <= epoch <= 20:
         lr = 5e-2
     elif 25 < epoch <= 45:
-        lr = 1e-3
+        lr = 5e-3
     else:
         lr = 1e-4
 

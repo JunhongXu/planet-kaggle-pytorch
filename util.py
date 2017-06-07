@@ -109,3 +109,5 @@ class Logger(object):
         plt.plot(np.arange(len(f2_scores)), f2_scores)
         plt.savefig('../log/%s_fcscore.jpg' % self.name)
 
+        plt.close('all')
+
