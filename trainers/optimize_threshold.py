@@ -1,6 +1,7 @@
 from torchvision.transforms import *
 import torch.nn as nn
 from trainers.train_densenet import densenet121
+from planet_models.densenet_planet import *
 from planet_models.resnet_planet import *
 from planet_models.simplenet_v3 import SimpleNetV3
 from planet_models.simplenet_v2 import *
@@ -10,7 +11,7 @@ import torch.nn.functional as F
 from util import f2_score
 
 
-def optimize_threshold(resolution=1000):
+def optimize_threshold_single(resolution=1000):
     """
     This function takes the validation set and find the best threshold for each class.
     """
@@ -20,12 +21,9 @@ def optimize_threshold(resolution=1000):
             pred[:, i] = (prediction[:, i] > t[i]).astype(np.int)
         return pred
 
-    large_net = nn.DataParallel(densenet121().cuda())
-    large_net.load_state_dict(torch.load('../models/pretrained_densenet121.pth'))
-    large_net.eval()
-    # simple_v2 = nn.DataParallel(SimpleNetV3().cuda())
-    # simple_v2.load_state_dict(torch.load('../models/simplenet_v3.1.pth'))
-    # simple_v2.eval()
+    net = nn.DataParallel(densenet169(pretrained=False).cuda())
+    net.load_state_dict(torch.load('../models/pretrained_densenet169_wd_1e-4.pth'))
+    net.eval()
 
     resnet_data = validation_jpg_loader(512, transform=Compose([
         Scale(224),
@@ -33,33 +31,14 @@ def optimize_threshold(resolution=1000):
         ToTensor(),
         Normalize(mean, std)
     ]))
-
-    # simplenet_data = validation_jpg_loader(
-    #     512, transform=Compose(
-    #         [
-    #             Scale(72),
-    #             RandomHorizontalFlip(),
-    #             ToTensor(),
-    #             Normalize(mean, std)
-    #         ]
-    #     )
-    # )
     pred = []
     targets = []
     # predict
-    # for batch_index, ((resnet_img, resnet_target), (simplenet_img, simplenet_target)) \
-    #     in enumerate(zip(resnet_data, simplenet_data)):
-    for batch_index, (simplenet_img, simplenet_target) in enumerate(resnet_data):
-        output = evaluate(large_net, simplenet_img)
-        # resnet_output = F.sigmoid(resnet_output)
-
-        # simplenet_output = evaluate(simple_v2, simplenet_img)
-        # simplenet_output = F.sigmoid(simplenet_output)
-
-        # output = F.sigmoid((simplenet_output + resnet_output)/2)
+    for batch_index, (img, target) in enumerate(resnet_data):
+        output = evaluate(net, img)
         output = F.sigmoid(output)
         pred.append(output.data.cpu().numpy())
-        targets.append(simplenet_target.cpu().numpy())
+        targets.append(target.cpu().numpy())
 
     pred = np.vstack(pred)
     targets = np.vstack(targets)
@@ -81,9 +60,75 @@ def optimize_threshold(resolution=1000):
     return threshold
 
 
+def optimize_threshold(models, datasets, resolution=1000):
+    """
+    This function takes the validation set and find the best threshold for each class.
+    """
+    def get_labels(prediction, t):
+        pred = np.zeros_like(prediction)
+        for i in range(0, 17):
+            pred[:, i] = (prediction[:, i] > t[i]).astype(np.int)
+        return pred
+
+    pred = []
+    targets = []
+    # predict
+    for batch_index, data in enumerate(zip(*datasets)):
+        output = 0.0
+        for index, (image, target) in enumerate(data):
+            output += F.sigmoid(evaluate(models[index], image))
+
+        output = output/len(models)
+        pred.append(output.data.cpu().numpy())
+        targets.append(target.cpu().numpy())
+
+    pred = np.vstack(pred)
+    targets = np.vstack(targets)
+    threshold = [0.15] * 17
+    # optimize
+    for i in range(17):
+        best_thresh = 0.0
+        best_score = 0.0
+        for r in range(resolution):
+            r /= resolution
+            threshold[i] = r
+            labels = get_labels(pred, threshold)
+            score = f2_score(targets, labels)
+            if score > best_score:
+                best_thresh = r
+                best_score = score
+        threshold[i] = best_thresh
+        print(i, best_score, best_thresh)
+    return threshold
+
+
 if __name__ == '__main__':
+    model1 = nn.DataParallel(densenet169(pretrained=False).cuda())
+    model1.load_state_dict(torch.load('../models/pretrained_densenet169_wd_1e-4.pth'))
+    model1.eval()
+    model2 = nn.DataParallel(SimpleNetV3().cuda())
+    model2.load_state_dict(torch.load('../models/simplenet_v3.1.pth'))
+    model2.eval()
+    models = [model1, model2]
+
+    datasets = [
+        validation_jpg_loader(512, transform=Compose([
+            Scale(224),
+            RandomHorizontalFlip(),
+            ToTensor(),
+            Normalize(mean, std)
+        ])),
+        validation_jpg_loader(
+         512, transform=Compose(
+             [
+                 Scale(72),
+                 RandomHorizontalFlip(),
+                 ToTensor(),
+                 Normalize(mean, std)
+             ]))
+                ]
     threshold = np.zeros(17)
     for i in range(0,10):
-        threshold = threshold + np.array(optimize_threshold(100))
+        threshold = threshold + np.array(optimize_threshold(models=models, datasets=datasets, resolution=200))
     threshold = threshold / 10
-    print(threshold)
+    print(list(threshold))

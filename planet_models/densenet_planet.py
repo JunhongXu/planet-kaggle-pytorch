@@ -16,4 +16,17 @@ def densenet121(num_classes=17, pretrained=False):
         model.load_state_dict(model_dict)
     return model
 
+def densenet169(num_classes=17, pretrained=False, dropout=0.2):
+    model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 32, 32), num_classes=num_classes,
+                     drop_rate=dropout)
+    if pretrained:
+        # load model dictionary
+        model_dict = model.state_dict()
+        # load pretrained model
+        pretrained_dict = model_zoo.load_url(model_urls['densenet169'])
+        # update model dictionary using pretrained model without classifier layer
+        model_dict.update({key: pretrained_dict[key] for key in pretrained_dict.keys() if 'classifier' not in key})
+        model.load_state_dict(model_dict)
+    return model
+
 

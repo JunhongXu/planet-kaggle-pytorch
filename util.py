@@ -12,7 +12,11 @@ import glob
 from planet_models.resnet_planet import resnet14_planet
 from planet_models.simplenet_v2 import SimpleNetV2
 
-BEST_THRESHOLD= [0.166, 0.082, 0.237, 0.178, 0.242, 0.223, 0.168, 0.173, 0.197, 0.107, 0.14, 0.242, 0.103, 0.17, 0.273, 0.147, 0.09 ]
+BEST_THRESHOLD= [ 0.2205 , 0.0985 , 0.2495 , 0.2495,  0.281,   0.2055 , 0.0965 , 0.1695 , 0.2055,
+  0.147 ,  0.1135,  0.218  , 0.131  , 0.134 ,  0.1665,  0.1035 , 0.088 ]
+
+BEST_THRESHOLD_SINGLE = [ 0.172,  0.092,  0.221,  0.22,   0.391,  0.203,  0.161,  0.163 , 0.2  ,  0.25,
+  0.165,  0.218  ,0.191  ,0.16 ,  0.19 ,  0.201 , 0.069]
 
 
 def evaluate(model, image):

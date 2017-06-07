@@ -2,9 +2,9 @@ from torch.nn import *
 from util import *
 from torch import optim
 from torchvision.transforms import *
-from planet_models.densenet_planet import densenet121, densenet169
+from planet_models.fpn import FPNet, Bottleneck
 
-NAME = 'pretrained_densenet169_wd_1e-4'
+NAME = 'fpnet33_wd_5e-4'
 
 
 class RandomVerticalFLip(object):
@@ -16,41 +16,34 @@ class RandomVerticalFLip(object):
 
 def get_optimizer(model, pretrained=True, lr=5e-5, weight_decay=5e-5):
     if pretrained:
-        params = [
-            {'params': model.features.parameters(), 'lr': lr},
-            {'params': model.classifier.parameters(), 'lr': lr * 10}
-        ]
+        # no pretrained yet
+        pass
     else:
-        params = [
-            {'params': model.features.parameters(), 'lr': lr},
-            {'params': model.classifier.parameters(), 'lr': lr}
-        ]
-    return optim.Adam(params=params, weight_decay=weight_decay)
+        params = model.parameters()
+    return optim.Adam(params=params, lr=lr, weight_decay=weight_decay)
 
 
 def train(epoch):
     criterion = MultiLabelSoftMarginLoss()
-    net = densenet169(pretrained=False)
+    net = FPNet(Bottleneck, [2, 3, 3, 2])
     logger = Logger('../log/', NAME)
-    # optimizer = optim.Adam(lr=5e-4, params=net.parameters())
-    optimizer = get_optimizer(net, False, 1e-4, 1e-4)
+    optimizer = get_optimizer(net, False, 1e-4, 5e-4)
     net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
-    # resnet.load_state_dict(torch.load('../models/simplenet_v3.pth'))
-    train_data_set = train_jpg_loader(64, transform=Compose(
+    train_data_set = train_jpg_loader(128, transform=Compose(
         [
 
-            Scale(256),
+            Scale(77),
             RandomHorizontalFlip(),
             RandomVerticalFLip(),
-            RandomCrop(224),
+            RandomCrop(72),
             ToTensor(),
             Normalize(mean, std)
         ]
     ))
-    validation_data_set = validation_jpg_loader(64, transform=Compose(
+    validation_data_set = validation_jpg_loader(128, transform=Compose(
         [
-            Scale(224),
+            Scale(72),
             ToTensor(),
             Normalize(mean, std)
          ]
@@ -59,7 +52,6 @@ def train(epoch):
     patience = 0
     for i in range(epoch):
         # training
-        # lr_scheduler(optimizer, epoch)
         training_loss = 0.0
         for batch_index, (target_x, target_y) in enumerate(train_data_set):
             if torch.cuda.is_available():
@@ -67,7 +59,7 @@ def train(epoch):
             net.train()
             target_x, target_y = Variable(target_x), Variable(target_y)
             optimizer.zero_grad()
-            output = net(target_x)
+            output, prob = net(target_x)
             loss = criterion(output, target_y)
             training_loss += loss.data[0]
             loss.backward()
@@ -85,7 +77,7 @@ def train(epoch):
             if torch.cuda.is_available():
                 val_y = val_y.cuda()
             val_y = Variable(val_y, volatile=True)
-            val_output = evaluate(net, val_x)
+            val_output, val_prob = evaluate(net, val_x)
             val_loss += criterion(val_output, val_y)
             val_output = F.sigmoid(val_output)
             binary_y = val_output.data.cpu().numpy()
@@ -110,7 +102,7 @@ def train(epoch):
         print('Evaluation loss is {}, Training loss is {}'.format(val_loss, training_loss))
         print('F2 Score is %s' % (f2_scores))
 
-        logger.add_record('train_loss', loss.data[0])
+        logger.add_record('train_loss', training_loss)
         logger.add_record('evaluation_loss', val_loss)
         logger.add_record('f2_score', f2_scores)
     logger.save()

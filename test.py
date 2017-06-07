@@ -10,14 +10,15 @@ from datasets import test_jpg_loader, mean, std
 from labels import *
 from planet_models.simplenet import MultiLabelCNN
 from planet_models.simplenet_v2 import SimpleNetV2
-from trainers.train_densenet import densenet121
+
+from planet_models.densenet_planet import densenet121, densenet169
 from planet_models.simplenet_v3 import SimpleNetV3
 from planet_models.resnet_planet import *
 from trainers.train_simplenet import evaluate
 from util import BEST_THRESHOLD
 
 
-MODEL='models/pretrained_densenet121.pth'
+MODEL='models/pretrained_densenet169_wd_1e-4.pth'
 
 
 def test(model_dir, transform):
@@ -36,7 +37,7 @@ def test(model_dir, transform):
     #     model = nn.DataParallel(resnext_29())
     # else:
     #     model = nn.DataParallel(SimpleNetV3())
-    model = nn.DataParallel(densenet121())
+    model = nn.DataParallel(densenet169())
     model.load_state_dict(torch.load(model_dir))
     model.eval()
 
