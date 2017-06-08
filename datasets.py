@@ -8,6 +8,7 @@ from spectral import *
 import numpy as np
 from skimage import io
 from sklearn.preprocessing import MinMaxScaler
+import cv2
 
 mean = [0.31151703, 0.34061992, 0.29885209]
 std = [0.16730586, 0.14391145, 0.13747531]
@@ -23,7 +24,12 @@ class RandomVerticalFLip(object):
 class RandomRotate(object):
     def __call__(self, img):
         if random.random() < 0.2:
-            img = img.rotate(45)
+            img = np.array(img)
+            angle = np.random.randint(1, 90)
+            height, width = img.shape[0:2]
+            mat = cv2.getRotationMatrix2D((width / 2, height / 2), angle, 1.0)
+            img = cv2.warpAffine(img, mat, (height, width), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
+            img = Image.fromarray(img)
         return img
 
 

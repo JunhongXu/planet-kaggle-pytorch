@@ -16,7 +16,8 @@ def densenet121(num_classes=17, pretrained=False):
         model.load_state_dict(model_dict)
     return model
 
-def densenet169(num_classes=17, pretrained=False, dropout=0.2):
+
+def densenet169(num_classes=17, pretrained=False, dropout=0.0):
     model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 32, 32), num_classes=num_classes,
                      drop_rate=dropout)
     if pretrained:

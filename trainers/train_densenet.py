@@ -4,7 +4,7 @@ from torch import optim
 from torchvision.transforms import *
 from planet_models.densenet_planet import densenet121, densenet169
 
-NAME = 'pretrained_densenet169_wd_1e-4'
+NAME = 'pretrained_densenet169_wd_5e-4_adam'
 
 
 class RandomVerticalFLip(object):
@@ -12,6 +12,20 @@ class RandomVerticalFLip(object):
         if random.random() < 0.5:
             img = img.transpose(Image.FLIP_TOP_BOTTOM)
         return img
+
+
+def lr_scheduler(epoch, optimizer):
+    if epoch <= 10:
+        lr = 5e-4
+    elif 10 < epoch <= 25:
+        lr =1e-4
+    elif 25 < epoch <=45:
+        lr = 9e-5
+    else:
+        lr = 5e-5
+
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
 
 
 def get_optimizer(model, pretrained=True, lr=5e-5, weight_decay=5e-5):
@@ -33,17 +47,19 @@ def train(epoch):
     net = densenet169(pretrained=False)
     logger = Logger('../log/', NAME)
     # optimizer = optim.Adam(lr=5e-4, params=net.parameters())
-    optimizer = get_optimizer(net, False, 1e-4, 1e-4)
+    # optimizer = get_optimizer(net, False, 1e-4, 1e-4)
+    optimizer = optim.Adam(params=net.parameters(), lr=5e-4, weight_decay=5e-4)
     net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
     # resnet.load_state_dict(torch.load('../models/simplenet_v3.pth'))
-    train_data_set = train_jpg_loader(64, transform=Compose(
+    train_data_set = train_jpg_loader(72, transform=Compose(
         [
 
             Scale(256),
             RandomHorizontalFlip(),
             RandomVerticalFLip(),
             RandomCrop(224),
+            RandomRotate(),
             ToTensor(),
             Normalize(mean, std)
         ]
@@ -59,7 +75,7 @@ def train(epoch):
     patience = 0
     for i in range(epoch):
         # training
-        # lr_scheduler(optimizer, epoch)
+        lr_scheduler(epoch, optimizer)
         training_loss = 0.0
         for batch_index, (target_x, target_y) in enumerate(train_data_set):
             if torch.cuda.is_available():
@@ -110,11 +126,11 @@ def train(epoch):
         print('Evaluation loss is {}, Training loss is {}'.format(val_loss, training_loss))
         print('F2 Score is %s' % (f2_scores))
 
-        logger.add_record('train_loss', loss.data[0])
+        logger.add_record('train_loss', training_loss)
         logger.add_record('evaluation_loss', val_loss)
         logger.add_record('f2_score', f2_scores)
-    logger.save()
-    logger.save_plot()
+        logger.save()
+        logger.save_plot()
 
 
 if __name__ == '__main__':

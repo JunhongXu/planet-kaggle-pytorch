@@ -80,6 +80,9 @@ class FPNet(nn.Module):
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)              # 8*8*256
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)              # 4*4*512
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)              # 2*2*1024
+        # downsampling prediction
+        self.d_pool = nn.AdaptiveAvgPool2d(1)
+        self.cls_d = nn.Sequential(_make_linear_bn_elu(in_units=1024, output_units=512))
 
         # upsampling
         self.layer3_up = nn.Sequential(_make_conv_bn_elu(self.inplanes//2, self.inplanes, kernel_size=1, stride=1, padding=0))    # 4*4*1024
@@ -87,9 +90,9 @@ class FPNet(nn.Module):
         self.layer1_up = nn.Sequential(_make_conv_bn_elu(self.inplanes//8, self.inplanes//4, kernel_size=1, stride=1, padding=0) ) # 16*16*256
 
         # final feature generation
-        self.f1 = nn.Sequential(_make_conv_bn_elu(256, 256, kernel_size=3, stride=2))  # 8*8*256
-        self.f2 = nn.Sequential(_make_conv_bn_elu(512, 256, kernel_size=3, stride=2))  # 4*4*256
-        self.f3 = nn.Sequential(_make_conv_bn_elu(1024, 256))                          # 4*4*256
+        self.f1 = nn.Sequential(_make_conv_bn_elu(256, 512, kernel_size=3, stride=2))  # 8*8*512
+        self.f2 = nn.Sequential(_make_conv_bn_elu(512, 512, kernel_size=3, stride=2))  # 4*4*512
+        self.f3 = nn.Sequential(_make_conv_bn_elu(1024, 512))                          # 4*4*512
 
         # reduce dimensionality before classifier 1*1*256
         self.pool1 = nn.AdaptiveAvgPool2d(1)
@@ -97,12 +100,12 @@ class FPNet(nn.Module):
         self.pool3 = nn.AdaptiveAvgPool2d(1)
 
         # clasifier
-        self.cls_1 = nn.Sequential(_make_linear_bn_elu(256, 512, dropout_rate=self.dropout_rate))
-        self.cls_2 = nn.Sequential(_make_linear_bn_elu(256, 512, dropout_rate=self.dropout_rate))
-        self.cls_3 = nn.Sequential(_make_linear_bn_elu(256, 512, dropout_rate=self.dropout_rate))
+        self.cls_1 = nn.Sequential(_make_linear_bn_elu(512, 512, dropout_rate=self.dropout_rate))
+        self.cls_2 = nn.Sequential(_make_linear_bn_elu(512, 512, dropout_rate=self.dropout_rate))
+        self.cls_3 = nn.Sequential(_make_linear_bn_elu(512, 512, dropout_rate=self.dropout_rate))
 
-        # final prediction
-        self.fc = nn.Linear(512*3, num_classes)
+        # logit
+        self.fc = nn.Linear(512*4, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -159,20 +162,26 @@ class FPNet(nn.Module):
         f3 = self.f3(m3)    # 2*2*256
 
         # max pool
-        f1 = self.pool1(f1)  # 256
+        f1 = self.pool1(f1)  # 512
         f1 = f1.view(f1.size(0), -1)
-        f2 = self.pool2(f2)  # 256
+        f2 = self.pool2(f2)  # 512
         f2 = f2.view(f2.size(0), -1)
-        f3 = self.pool3(f3)  # 256
+        f3 = self.pool3(f3)  # 512
         f3 = f3.view(f3.size(0), -1)
+        # downsampling classifier
+        d_out = self.d_pool(d4)
+        d_out = d_out.view(d_out.size(0), -1)
+        d_out = self.cls_d(d_out)   # 512
+
         # classifier
-        cls1 = self.cls_1(f1)
-        cls2 = self.cls_2(f2)
-        cls3 = self.cls_3(f3)
-        # concatenate
-        cls = torch.cat((cls1, cls2, cls3, ), dim=1) # 512 * 3
-        # logit
+        cls1 = self.cls_1(f1)   # 512
+        cls2 = self.cls_2(f2)   # 512
+        cls3 = self.cls_3(f3)   # 512
+
+        cls = torch.cat((cls1, cls2, cls3, d_out), dim=1)
+
         logit = self.fc(cls)
+
         prob = F.sigmoid(logit)
         return logit, prob
 
