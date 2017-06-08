@@ -7,21 +7,6 @@ from planet_models.fpn import FPNet, Bottleneck
 NAME = 'fpnet62_wd_1e-4_adam_rotate'
 
 
-class RandomVerticalFLip(object):
-    def __call__(self, img):
-        if random.random() < 0.5:
-            img = img.transpose(Image.FLIP_TOP_BOTTOM)
-        return img
-
-
-class RandomRotate(object):
-    def __call__(self, img):
-        if random.random() < 0.5:
-            rotation = np.random.randint(1, 90)
-            img = img.rotate(rotation)
-        return img
-
-
 def get_optimizer(model, pretrained=True, lr=5e-5, weight_decay=5e-5):
     if pretrained:
         # no pretrained yet
@@ -33,13 +18,13 @@ def get_optimizer(model, pretrained=True, lr=5e-5, weight_decay=5e-5):
 
 def lr_schedule(epoch, optimizer):
     if epoch < 10:
-        lr = 5e-4
+        lr = 9e-4
     elif 10 <= epoch <= 20:
-        lr = 1e-4
+        lr = 5e-4
     elif 25 < epoch <= 45:
-        lr = 5e-5
+        lr = 1e-4
     else:
-        lr = 1e-5
+        lr = 5e-5
 
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr

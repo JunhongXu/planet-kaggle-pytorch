@@ -13,6 +13,20 @@ mean = [0.31151703, 0.34061992, 0.29885209]
 std = [0.16730586, 0.14391145, 0.13747531]
 
 
+class RandomVerticalFLip(object):
+    def __call__(self, img):
+        if random.random() < 0.5:
+            img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        return img
+
+
+class RandomRotate(object):
+    def __call__(self, img):
+        if random.random() < 0.2:
+            img = img.rotate(45)
+        return img
+
+
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in ['.png', 'jpg', '.jpeg'])
 

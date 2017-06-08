@@ -78,7 +78,6 @@ def f2_score(y_true, y_pred):
     return fbeta_score(y_true, y_pred, beta=2, average='samples')
 
 
-
 class Logger(object):
     def __init__(self, save_dir, name):
         self.save_dir = save_dir
