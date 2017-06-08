@@ -18,9 +18,9 @@ def get_optimizer(model, pretrained=True, lr=5e-5, weight_decay=5e-5):
 
 def lr_schedule(epoch, optimizer):
     if epoch < 10:
-        lr = 9e-4
+        lr = 6e-4
     elif 10 <= epoch <= 20:
-        lr = 5e-4
+        lr = 3e-4
     elif 25 < epoch <= 45:
         lr = 1e-4
     else:
@@ -32,19 +32,19 @@ def lr_schedule(epoch, optimizer):
 
 def train(epoch):
     criterion = MultiLabelSoftMarginLoss()
-    net = FPNet(Bottleneck, [2, 8, 10, 2], dropout_rate=0.4)
+    net = FPNet(Bottleneck, [3, 4, 6, 3], dropout_rate=0.4)
     logger = Logger('../log/', NAME)
     # optimizer = get_optimizer(net, False, 1e-4, 5e-4)
-    optimizer = optim.Adam(net.parameters(), lr=5e-4, weight_decay=1e-4)
+    optimizer = optim.Adam(net.parameters(), lr=5e-4, weight_decay=5e-4)
     net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
     train_data_set = train_jpg_loader(128, transform=Compose(
         [
 
-            Scale(77),
+            Scale(78),
             RandomHorizontalFlip(),
             RandomVerticalFLip(),
-            RandomRotate(),
+            # RandomRotate(),
             RandomCrop(72),
             ToTensor(),
             Normalize(mean, std)

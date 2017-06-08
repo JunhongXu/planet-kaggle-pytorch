@@ -110,3 +110,13 @@ class Logger(object):
 
         plt.close('all')
 
+
+if __name__ == '__main__':
+    import cv2
+    img = cv2.imread('dog.jpg')
+    img = cv2.resize(img, (256, 256))
+    height, width = img.shape[0:2]
+    mat = cv2.getRotationMatrix2D((width / 2, height / 2), 45, 1.0)
+    img = cv2.warpAffine(img, mat, (height, width), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
+    cv2.imshow('frame', img)
+    cv2.waitKey()
