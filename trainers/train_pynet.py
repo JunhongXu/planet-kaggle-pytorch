@@ -43,10 +43,9 @@ def train(epoch):
 
             Scale(78),
             RandomHorizontalFlip(),
-            RandomVerticalFLip(),
+            RandomVerticalFlip(),
             RandomRotate(),
             RandomCrop(72),
-            ToTensor(),
             Normalize(mean, std)
         ]
     ))

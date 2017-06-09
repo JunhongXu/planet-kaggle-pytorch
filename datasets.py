@@ -14,10 +14,19 @@ mean = [0.31151703, 0.34061992, 0.29885209]
 std = [0.16730586, 0.14391145, 0.13747531]
 
 
-class RandomVerticalFLip(object):
+class RandomVerticalFlip(object):
     def __call__(self, img):
         if random.random() < 0.5:
             img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        return img
+
+
+class RandomTranspose(object):
+    def __call__(self, img):
+        if random.random() < 0.5:
+            img = np.array(img)
+            img = img.transpose(1, 0, 2)
+            img = Image.fromarray(img)
         return img
 
 
@@ -25,7 +34,7 @@ class RandomRotate(object):
     def __call__(self, img):
         if random.random() < 0.2:
             img = np.array(img)
-            angle = np.random.randint(1, 90)
+            angle = np.random.randint(-45, 45)
             height, width = img.shape[0:2]
             mat = cv2.getRotationMatrix2D((width / 2, height / 2), angle, 1.0)
             img = cv2.warpAffine(img, mat, (height, width), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
@@ -197,7 +206,7 @@ def train_jpg_loader(batch_size=64, transform=ToTensor()):
         mode='Train',
         input_transform=transform
     )
-    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, )
+    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=3)
 
 
 def validation_jpg_loader(batch_size=64, transform=ToTensor()):
@@ -207,7 +216,7 @@ def validation_jpg_loader(batch_size=64, transform=ToTensor()):
         mode='Validation',
         input_transform=transform
     )
-    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
+    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False, num_workers=3)
 
 
 def test_jpg_loader(batch_size=128, transform=ToTensor()):

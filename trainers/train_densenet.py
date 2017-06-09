@@ -15,11 +15,11 @@ class RandomVerticalFLip(object):
 
 
 def lr_scheduler(epoch, optimizer):
-    if epoch <= 20:
+    if epoch <= 10:
         lr = 1e-1
-    elif 20 < epoch <= 40:
+    elif 10 < epoch <= 30:
         lr = 1e-2
-    elif 40 < epoch <= 80:
+    elif 30 < epoch <= 45:
         lr = 5e-3
     else:
         lr = 1e-3

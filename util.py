@@ -101,12 +101,21 @@ class Logger(object):
         plt.plot(np.arange(len(train_loss)), train_loss, color='red', label='train_loss')
         plt.plot(np.arange(len(eval_loss)), eval_loss, color='blue', label='eval_loss')
         plt.legend(loc='best')
-
-        plt.savefig('../log/%s_losses.jpg' % self.name)
+        # fig_save_dir = os.path.join(self.save_dir, '%s.jpg' %self.name)
+        plt.savefig(os.path.join(self.save_dir, 'loss.jpg'))
 
         plt.figure()
         plt.plot(np.arange(len(f2_scores)), f2_scores)
-        plt.savefig('../log/%s_fcscore.jpg' % self.name)
+        plt.savefig(os.path.join(self.save_dir, 'f2_score.jpg'))
 
         plt.close('all')
 
+    def save_time(self, start_time, end_time):
+        with open(os.path.join(self.save_dir, 'time.txt'), 'w') as f:
+            f.write('start time, end time, duration\n')
+            f.write('{}, {}, {}'.format(start_time, end_time, end_time - start_time))
+
+if __name__ == '__main__':
+    from planet_models.resnet_planet import resnet14_planet
+    a = resnet14_planet()
+    print(str(resnet14_planet).split(' ')[1])
