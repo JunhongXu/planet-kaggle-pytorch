@@ -46,7 +46,7 @@ def train(epoch):
     criterion = MultiLabelSoftMarginLoss()
     net = densenet169(pretrained=False)
     logger = Logger('../log/', NAME)
-    optimizer = optim.SGD(lr=1e-1, params=net.parameters(), weight_decay=5e-4, momentum=0.8, nesterov=True)
+    optimizer = optim.SGD(lr=1e-1, params=net.parameters(), weight_decay=5e-4, momentum=0.9, nesterov=True)
     # optimizer = get_optimizer(net, False, 1e-4, 1e-4)
     # optimizer = optim.Adam(params=net.parameters(), lr=5e-4, weight_decay=5e-4)
     net.cuda()
