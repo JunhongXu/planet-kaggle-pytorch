@@ -2,11 +2,12 @@ import torch.nn as nn
 from torch.nn import functional as F
 from torch import optim
 from trainers.train_simplenet import evaluate
-from torchvision.transforms import RandomHorizontalFlip, RandomCrop, Compose, Scale, ToTensor, Normalize
-from planet_models.densenet_planet import densenet169, densenet121
+from torchvision.transforms import Lambda, Compose, Normalize
+from planet_models.densenet_planet import densenet169, densenet121, densenet161
 from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet, resnet152_planet
 from torch.autograd import Variable
-from datasets import RandomRotate, RandomVerticalFlip, RandomTranspose, train_jpg_loader, validation_jpg_loader, mean, std
+from datasets import RandomTranspose, randomFlip, \
+    train_jpg_loader, validation_jpg_loader, mean, std, toTensor, randomShiftScaleRotate, train_jpg_loader_all
 from util import Logger, f2_score
 import numpy as np
 import torch
@@ -19,7 +20,7 @@ A baseline trainer trains the models as followed:
 -------parameters---------
     epochs: 80
 
-    batch size: 128, 128, 128, 72, 72, 72, 72
+    batch size: 96, 96, 96, 60, 60, 60, 60
 
     use SGD+0.9momentum w/o nestrov
 
@@ -35,8 +36,11 @@ A baseline trainer trains the models as followed:
 """
 
 
-models = [resnet18_planet, resnet34_planet, resnet50_planet, resnet152_planet, densenet169, densenet121]
-batch_size = [128, 128, 128, 72, 72, 72, 72]
+models = [
+        resnet18_planet, resnet34_planet, resnet50_planet, resnet152_planet,
+        densenet121, densenet169, densenet161,
+          ]
+batch_size = [96, 96, 96, 60, 60, 60, 60]
 
 
 def lr_schedule(epoch, optimizer):
@@ -76,24 +80,32 @@ def evaluate_train(model, val_data, criterion):
     targets = np.concatenate(targets)
     preds = np.concatenate(preds)
     f2_scores = f2_score(targets, preds)
-    val_loss = val_loss.data[0]/batch_index
+    val_loss = val_loss.data[0]/(batch_index+1)
     return val_loss, f2_scores
 
 
 def train_baselines(epoch):
     transformations = Compose(
         [
-            RandomHorizontalFlip(),
-            RandomVerticalFlip(),
+            Lambda(lambda x: randomShiftScaleRotate(x)),
+            Lambda(lambda x: randomFlip(x)),
             RandomTranspose(),
-            RandomRotate(),
-            RandomCrop(224),
-            ToTensor(),
-            Normalize(mean=mean, std=std)
+            Lambda(lambda x: toTensor(x)),
+            # RandomRotate(),
+            # RandomCrop(224),
+            # Normalize(mean=mean, std=std)
          ]
     )
 
     criterion = nn.MultiLabelSoftMarginLoss()
+    train_data = train_jpg_loader(64, transform=transformations)
+    val_data = validation_jpg_loader(64, transform=Compose(
+            [
+                # Scale(224),
+                Lambda(lambda x: toTensor(x)),
+                # Normalize(mean=mean, std=std)
+            ]
+        ))
 
     for model, batch in zip(models, batch_size):
         name = str(model).split()[1]
@@ -101,17 +113,10 @@ def train_baselines(epoch):
         print('[!]Batch size %s' % batch)
         logger = Logger(name=name, save_dir='../log/%s' % name)
         model = nn.DataParallel(model().cuda())
-        optimizer = optim.SGD(momentum=0.9, lr=0.1, params=model.parameters(), weight_decay=5e-4)
+        optimizer = optim.SGD(momentum=0.9, lr=0.1, params=model.parameters(), weight_decay=1e-4)
 
-        train_data = train_jpg_loader(batch, transform=transformations)
-        val_data = validation_jpg_loader(batch, transform=Compose(
-            [
-                Scale(224),
-                ToTensor(),
-                Normalize(mean=mean, std=std)
-            ]
-        ))
-
+        train_data.batch_size = batch
+        val_data.batch_size = batch
 
         # start training
         best_loss = np.inf
@@ -127,16 +132,18 @@ def train_baselines(epoch):
                     target_x, target_y = target_x.cuda(), target_y.cuda()
                 model.train()
                 target_x, target_y = Variable(target_x), Variable(target_y)
-                optimizer.zero_grad()
                 output = model(target_x)
                 loss = criterion(output, target_y)
-                training_loss += loss.data[0]
+
+                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+
+                training_loss += loss.data[0]
                 if batch_index % 50 == 0:
                     print('Training loss is {}'.format(loss.data[0]))
             print('Finished epoch {}'.format(i))
-            training_loss /= batch_index
+            training_loss /= (batch_index+1)
 
             # evaluating
             val_loss, f2_scores = evaluate_train(model, val_data, criterion)
@@ -164,4 +171,4 @@ def train_baselines(epoch):
 
         logger.save_time(start_time, time.time())
 if __name__ == '__main__':
-    train_baselines(80)
+    train_baselines(150)

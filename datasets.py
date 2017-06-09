@@ -17,7 +17,14 @@ std = [0.16730586, 0.14391145, 0.13747531]
 class RandomVerticalFlip(object):
     def __call__(self, img):
         if random.random() < 0.5:
-            img = img.transpose(Image.FLIP_TOP_BOTTOM)
+            img = cv2.flip(img, 0)  # top to bottom
+        return img
+
+
+class RandomHorizontalFlip(object):
+    def __call__(self, img):
+        if random.random() < 0.5:
+            img = cv2.flip(img, 1)  # left to right
         return img
 
 
@@ -26,7 +33,7 @@ class RandomTranspose(object):
         if random.random() < 0.5:
             img = np.array(img)
             img = img.transpose(1, 0, 2)
-            img = Image.fromarray(img)
+            # img = Image.fromarray(img)
         return img
 
 
@@ -38,8 +45,49 @@ class RandomRotate(object):
             height, width = img.shape[0:2]
             mat = cv2.getRotationMatrix2D((width / 2, height / 2), angle, 1.0)
             img = cv2.warpAffine(img, mat, (height, width), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
-            img = Image.fromarray(img)
+            # img = Image.fromarray(img)
         return img
+
+
+def toTensor(img):
+    """convert a numpy array of shape HWC to CHW tensor"""
+    img = img.transpose((2, 0, 1)).astype(np.float32)
+    tensor = torch.from_numpy(img).float()
+    return tensor/255.0
+
+
+def randomFlip(img, u=0.5):
+    if random.random() < u:
+        img = cv2.flip(img,random.randint(-1,1))
+    return img
+
+
+def randomShiftScaleRotate(img, u=0.5, shift_limit=4, scale_limit=4, rotate_limit=45):
+    if random.random() < u:
+        height,width,channel = img.shape
+        assert(width==height)
+        size0 = width
+        size1 = width+2*scale_limit
+
+        angle = random.uniform(-rotate_limit,rotate_limit)  #degree
+        size  = round(random.uniform(size0,size1))
+        dx    = round(random.uniform(0,size1-size))  #pixel
+        dy    = round(random.uniform(0,size1-size))
+
+        cc = math.cos(angle/180*math.pi)*(size/size0)
+        ss = math.sin(angle/180*math.pi)*(size/size0)
+        rotate_matrix = np.array([ [cc,-ss], [ss,cc] ])
+
+        box0 = np.array([ [0,0], [size0,0],  [size0,size0], [0,size0], ])
+        box1 = box0 - np.array([width/2,height/2])
+        box1 = np.dot(box1,rotate_matrix.T) + np.array([width/2+dx,height/2+dy])
+
+        box0 = box0.astype(np.float32)
+        box1 = box1.astype(np.float32)
+        mat = cv2.getPerspectiveTransform(box0,box1)
+        img = cv2.warpPerspective(img, mat, (height,width),flags=cv2.INTER_LINEAR,borderMode=cv2.BORDER_REFLECT_101)
+
+    return img
 
 
 def is_image_file(filename):
@@ -71,8 +119,9 @@ def load_img(filepath):
     np.seterr(all='warn')
 
     if is_image_file(filepath):
-        image = Image.open(filepath)
-        image = image.convert('RGB')
+        image = cv2.imread(filepath)# image = io.imread(filepath) # image = Image.open(filepath)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image = image.convert('RGB')
     elif '.tif' in filepath:
         tif_image = io.imread(filepath)
         image = np.empty_like(tif_image).astype(np.int32)
@@ -83,7 +132,7 @@ def load_img(filepath):
         ndwi = calc_ndwi(nrg)
         image[:, :, :3] = rgb
         image[:, :, -1] = ndwi * 255.0
-        image = Image.fromarray(image.astype('uint8'))
+        # image = Image.fromarray(image.astype('uint8'))
     else:
         raise OSError('File is not either a .tif file or an image file.')
     return image
@@ -101,7 +150,7 @@ def input_transform(crop_size):
 
 class PlanetDataSet(Dataset):
     def __init__(self, image_dir, label_dir=None, num_labels=17, mode='Train', input_transform=ToTensor(),
-                 target_transform=None, tif=False):
+                 read_all=False, target_transform=None, tif=False):
         super(PlanetDataSet, self).__init__()
         self.mode = mode
         self.tif = tif
@@ -112,7 +161,10 @@ class PlanetDataSet(Dataset):
         if mode == 'Train' or mode == 'Validation':
             self.targets = []
             self.labels = pd.read_csv(label_dir)
-            image_names = pd.read_csv('../dataset/train.csv' if mode == 'Train' else '../dataset/validation.csv')
+            if read_all:
+                image_names = pd.read_csv('../dataset/train_all.csv')
+            else:
+                image_names = pd.read_csv('../dataset/train.csv' if mode == 'Train' else '../dataset/validation.csv')
             image_names = image_names.as_matrix().flatten()
             self.image_filenames = image_names
             for image in image_names:
@@ -199,6 +251,17 @@ def test_tif_loader(batch_size=64, transform=ToTensor()):
     return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, )
 
 
+def train_jpg_loader_all(batch_size=64, transform=ToTensor()):
+    dataset = PlanetDataSet(
+        '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train-jpg',
+        '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train.csv',
+        mode='Train',
+        input_transform=transform,
+        read_all=True
+    )
+    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True)
+
+
 def train_jpg_loader(batch_size=64, transform=ToTensor()):
     dataset = PlanetDataSet(
         '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train-jpg',
@@ -216,7 +279,7 @@ def validation_jpg_loader(batch_size=64, transform=ToTensor()):
         mode='Validation',
         input_transform=transform
     )
-    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False, num_workers=3)
+    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
 
 def test_jpg_loader(batch_size=128, transform=ToTensor()):

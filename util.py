@@ -29,11 +29,11 @@ def evaluate(model, image):
     return output
 
 
-def split_train_validation(num_val=3000):
+def split_train_validation(index, num_val=3000):
     """
     Save train image names and validation image names to csv files
     """
-    train_image_idx = np.sort(np.random.choice(40479, 40479-3000, replace=False))
+    train_image_idx = np.sort(np.random.choice(40479, 40479-num_val, replace=False))
     all_idx = np.arange(40479)
     validation_image_idx = np.zeros(num_val, dtype=np.int32)
     val_idx = 0
@@ -54,10 +54,10 @@ def split_train_validation(num_val=3000):
         eval.append('train_%s' % name)
 
     df = pds.DataFrame(train)
-    df.to_csv('train.csv', index=False, header=False)
+    df.to_csv('dataset/train_%s.csv' % index, index=False, header=False)
 
     df = pds.DataFrame(eval)
-    df.to_csv('validation.csv', index=False, header=False)
+    df.to_csv('dataset/validation_%s.csv' % index, index=False, header=False)
 
 
 def threshold_labels(y, threshold=0.2):
@@ -101,7 +101,7 @@ class Logger(object):
         plt.plot(np.arange(len(train_loss)), train_loss, color='red', label='train_loss')
         plt.plot(np.arange(len(eval_loss)), eval_loss, color='blue', label='eval_loss')
         plt.legend(loc='best')
-        # fig_save_dir = os.path.join(self.save_dir, '%s.jpg' %self.name)
+
         plt.savefig(os.path.join(self.save_dir, 'loss.jpg'))
 
         plt.figure()
@@ -113,9 +113,7 @@ class Logger(object):
     def save_time(self, start_time, end_time):
         with open(os.path.join(self.save_dir, 'time.txt'), 'w') as f:
             f.write('start time, end time, duration\n')
-            f.write('{}, {}, {}'.format(start_time, end_time, end_time - start_time))
+            f.write('{}, {}, {}'.format(start_time, end_time, (end_time - start_time)/60))
 
 if __name__ == '__main__':
-    from planet_models.resnet_planet import resnet14_planet
-    a = resnet14_planet()
-    print(str(resnet14_planet).split(' ')[1])
+    split_train_validation('all', 0)
