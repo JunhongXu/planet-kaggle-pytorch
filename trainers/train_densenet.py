@@ -4,7 +4,7 @@ from torch import optim
 from torchvision.transforms import *
 from planet_models.densenet_planet import densenet121, densenet169
 
-NAME = 'pretrained_densenet169_wd_5e-4_adam'
+NAME = 'pretrained_densenet169_wd_5e-4_SGD'
 
 
 class RandomVerticalFLip(object):
@@ -15,14 +15,14 @@ class RandomVerticalFLip(object):
 
 
 def lr_scheduler(epoch, optimizer):
-    if epoch <= 10:
-        lr = 5e-4
-    elif 10 < epoch <= 25:
-        lr =1e-4
-    elif 25 < epoch <=45:
-        lr = 9e-5
+    if epoch <= 20:
+        lr = 1e-1
+    elif 20 < epoch <= 40:
+        lr = 1e-2
+    elif 40 < epoch <= 80:
+        lr = 5e-3
     else:
-        lr = 5e-5
+        lr = 1e-3
 
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
@@ -46,9 +46,9 @@ def train(epoch):
     criterion = MultiLabelSoftMarginLoss()
     net = densenet169(pretrained=False)
     logger = Logger('../log/', NAME)
-    # optimizer = optim.Adam(lr=5e-4, params=net.parameters())
+    optimizer = optim.SGD(lr=1e-1, params=net.parameters(), weight_decay=5e-4, momentum=0.8, nesterov=True)
     # optimizer = get_optimizer(net, False, 1e-4, 1e-4)
-    optimizer = optim.Adam(params=net.parameters(), lr=5e-4, weight_decay=5e-4)
+    # optimizer = optim.Adam(params=net.parameters(), lr=5e-4, weight_decay=5e-4)
     net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
     # resnet.load_state_dict(torch.load('../models/simplenet_v3.pth'))

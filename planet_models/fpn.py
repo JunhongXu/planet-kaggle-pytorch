@@ -8,19 +8,19 @@ from torch.autograd import Variable
 
 def _make_conv_bn_elu(in_channels, out_channels, kernel_size=3, stride=1, padding=1):
     return OrderedDict([
-        ('conv2d', nn.Conv2d(in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)),
+        ('conv2d', nn.Conv2d(in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride,
+                             padding=padding, bias=False)),
         ('batch_norm', nn.BatchNorm2d(out_channels)),
         ('elu', nn.ELU(inplace=True))
     ])
 
 
-def _make_linear_bn_elu(in_units, output_units, dropout_rate=0.2):
+def _make_linear_bn_elu(in_units, output_units):
     return OrderedDict(
             [
                 ('linear', nn.Linear(in_units, output_units, bias=False)),
                 ('batch_norm', nn.BatchNorm1d(output_units)),
                 ('elu', nn.ELU()),
-                ('dropout', nn.Dropout(p=dropout_rate))
             ]
         )
 
@@ -66,9 +66,8 @@ class Bottleneck(nn.Module):
 
 class FPNet(nn.Module):
 
-    def __init__(self, block, layers, input_channels=3, num_classes=17, dropout_rate=0.2):
+    def __init__(self, block, layers, input_channels=3, num_classes=17):
         self.inplanes = 32
-        self.dropout_rate = dropout_rate
         super(FPNet, self).__init__()
         self.conv1 = nn.Sequential(
             _make_conv_bn_elu(in_channels=input_channels, out_channels=32, kernel_size=3, stride=2, padding=0)
@@ -85,9 +84,12 @@ class FPNet(nn.Module):
         self.cls_d = nn.Sequential(_make_linear_bn_elu(in_units=1024, output_units=512))
 
         # upsampling
-        self.layer3_up = nn.Sequential(_make_conv_bn_elu(self.inplanes//2, self.inplanes, kernel_size=1, stride=1, padding=0))    # 4*4*1024
-        self.layer2_up = nn.Sequential(_make_conv_bn_elu(self.inplanes//4, self.inplanes//2, kernel_size=1, stride=1, padding=0))  # 8*8*512
-        self.layer1_up = nn.Sequential(_make_conv_bn_elu(self.inplanes//8, self.inplanes//4, kernel_size=1, stride=1, padding=0) ) # 16*16*256
+        self.layer3_up = nn.Sequential(_make_conv_bn_elu(self.inplanes//2, self.inplanes,
+                                                         kernel_size=1, stride=1, padding=0))    # 4*4*1024
+        self.layer2_up = nn.Sequential(_make_conv_bn_elu(self.inplanes//4, self.inplanes//2,
+                                                         kernel_size=1, stride=1, padding=0))  # 8*8*512
+        self.layer1_up = nn.Sequential(_make_conv_bn_elu(self.inplanes//8, self.inplanes//4,
+                                                         kernel_size=1, stride=1, padding=0) ) # 16*16*256
 
         # final feature generation
         self.f1 = nn.Sequential(_make_conv_bn_elu(256, 512, kernel_size=3, stride=2))  # 8*8*512
@@ -100,9 +102,9 @@ class FPNet(nn.Module):
         self.pool3 = nn.AdaptiveAvgPool2d(1)
 
         # clasifier
-        self.cls_1 = nn.Sequential(_make_linear_bn_elu(512, 512, dropout_rate=self.dropout_rate))
-        self.cls_2 = nn.Sequential(_make_linear_bn_elu(512, 512, dropout_rate=self.dropout_rate))
-        self.cls_3 = nn.Sequential(_make_linear_bn_elu(512, 512, dropout_rate=self.dropout_rate))
+        self.cls_1 = nn.Sequential(_make_linear_bn_elu(512, 512))
+        self.cls_2 = nn.Sequential(_make_linear_bn_elu(512, 512))
+        self.cls_3 = nn.Sequential(_make_linear_bn_elu(512, 512))
 
         # logit
         self.fc = nn.Linear(512*4, num_classes)
@@ -168,6 +170,7 @@ class FPNet(nn.Module):
         f2 = f2.view(f2.size(0), -1)
         f3 = self.pool3(f3)  # 512
         f3 = f3.view(f3.size(0), -1)
+
         # downsampling classifier
         d_out = self.d_pool(d4)
         d_out = d_out.view(d_out.size(0), -1)

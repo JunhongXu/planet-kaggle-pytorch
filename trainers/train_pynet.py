@@ -18,13 +18,13 @@ def get_optimizer(model, pretrained=True, lr=5e-5, weight_decay=5e-5):
 
 def lr_schedule(epoch, optimizer):
     if epoch < 10:
-        lr = 1e-4
+        lr = 5e-4
     elif 10 <= epoch <= 40:
-        lr = 9e-5
+        lr = 1e-4
     elif 40 < epoch <= 80:
-        lr = 6e-5
+        lr = 9e-5
     else:
-        lr = 3e-5
+        lr = 6e-5
 
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
@@ -32,7 +32,7 @@ def lr_schedule(epoch, optimizer):
 
 def train(epoch):
     criterion = MultiLabelSoftMarginLoss()
-    net = FPNet(Bottleneck, [2, 2, 4, 2], dropout_rate=0.15)
+    net = FPNet(Bottleneck, [2, 4, 4, 2], dropout_rate=0.15)
     logger = Logger('../log/', NAME)
     # optimizer = get_optimizer(net, False, 1e-4, 5e-4)
     optimizer = optim.Adam(net.parameters(), lr=5e-4, weight_decay=5e-4)
