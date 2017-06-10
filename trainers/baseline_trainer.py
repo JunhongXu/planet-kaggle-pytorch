@@ -82,7 +82,7 @@ def evaluate_train(model, val_data, criterion, b):
     targets = np.concatenate(targets)
     preds = np.concatenate(preds)
     f2_scores = f2_score(targets, preds)
-    val_loss = val_loss.data[0]/num_images
+    val_loss = val_loss.data[0]/num_img
     return val_loss, f2_scores
 
 
