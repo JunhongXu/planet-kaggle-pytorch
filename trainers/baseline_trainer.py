@@ -65,7 +65,8 @@ def evaluate_train(model, val_data, criterion, b):
     model.eval()
     preds = []
     targets = []
-    num_images = len(val_data.dataset)
+    # num_images = len(val_data.dataset)
+    num_img = 0
     for batch_index, (val_x, val_y) in enumerate(val_data):
         if torch.cuda.is_available():
             val_y = val_y.cuda()
@@ -77,6 +78,7 @@ def evaluate_train(model, val_data, criterion, b):
         binary_y = (binary_y > 0.2).astype(np.int32)
         preds.append(binary_y)
         targets.append(val_y.data.cpu().numpy())
+        num_img += val_x.size()
     targets = np.concatenate(targets)
     preds = np.concatenate(preds)
     f2_scores = f2_score(targets, preds)
@@ -129,9 +131,11 @@ def train_baselines(epoch):
             training_loss = 0.0
             # adjust learning rate
             lr_schedule(epoch, optimizer)
+            num_img = 0
             for batch_index, (target_x, target_y) in enumerate(train_data):
                 if torch.cuda.is_available():
                     target_x, target_y = target_x.cuda(), target_y.cuda()
+                num_img += target_x.size()
                 model.train()
                 target_x, target_y = Variable(target_x), Variable(target_y)
                 output = model(target_x)
@@ -145,7 +149,7 @@ def train_baselines(epoch):
                 if batch_index % 50 == 0:
                     print('Training loss is {}'.format(loss.data[0]))
             print('Finished epoch {}'.format(i))
-            training_loss /= num_images
+            training_loss /= num_img
 
             # evaluating
             val_loss, f2_scores = evaluate_train(model, val_data, criterion, batch)
