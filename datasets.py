@@ -149,7 +149,7 @@ def input_transform(crop_size):
 
 
 class PlanetDataSet(Dataset):
-    def __init__(self, image_dir, label_dir=None, num_labels=17, mode='Train', input_transform=ToTensor(),
+    def __init__(self, image_dir, label_dir=None, num_labels=17, mode='Train', input_transform=None,
                  read_all=False, target_transform=None, tif=False):
         super(PlanetDataSet, self).__init__()
         self.mode = mode
@@ -164,7 +164,7 @@ class PlanetDataSet(Dataset):
             if read_all:
                 image_names = pd.read_csv('../dataset/train_all.csv')
             else:
-                image_names = pd.read_csv('../dataset/train.csv' if mode == 'Train' else '../dataset/validation.csv')
+                image_names = pd.read_csv('dataset/train.csv' if mode == 'Train' else '../dataset/validation.csv')
             image_names = image_names.as_matrix().flatten()
             self.image_filenames = image_names
             for image in image_names:
@@ -291,8 +291,20 @@ def test_jpg_loader(batch_size=128, transform=ToTensor()):
     return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
 
+def check(dataset):
+    for i, (x, y) in enumerate(dataset):
+        x = x.numpy().reshape(256, 256, 3)
+        y = '\n'.join(str(y))
+        cv2.addText(img=x, text=y, nameFont=cv2.FONT_HERSHEY_COMPLEX, org=(10, 10))
+        cv2.imshow('frame', x)
+        cv2.waitKey(30)
+
+
 if __name__ == '__main__':
-    dd = PlanetDataSet(        '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train-jpg',
+    dd = PlanetDataSet('/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train-jpg',
         '/media/jxu7/BACK-UP/Data/AmazonPlanet/train/train.csv',
-        mode='Train')
-    print(dd.mean_std())
+        mode='Train', input_transform=None)
+    dd = DataLoader(dd, batch_size=1)
+    check(dd)
+
+    # print(dd.mean_std())
