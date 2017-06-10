@@ -59,28 +59,28 @@ def lr_schedule(epoch, optimizer):
         para_group['lr'] = lr
 
 
-def evaluate_train(model, val_data, criterion):
+def evaluate_train(model, val_data, criterion, b):
     # evaluating
     val_loss = 0.0
     model.eval()
     preds = []
     targets = []
+    num_images = len(val_data.dataset)
     for batch_index, (val_x, val_y) in enumerate(val_data):
         if torch.cuda.is_available():
             val_y = val_y.cuda()
         val_y = Variable(val_y, volatile=True)
         val_output = evaluate(model, val_x)
-        val_loss += criterion(val_output, val_y)
+        val_loss += criterion(val_output, val_y)*b
         val_output = F.sigmoid(val_output)
         binary_y = val_output.data.cpu().numpy()
-        binary_y[binary_y > 0.2] = 1
-        binary_y[binary_y <= 0.2] = 0
+        binary_y = (binary_y > 0.2).astype(np.int32)
         preds.append(binary_y)
         targets.append(val_y.data.cpu().numpy())
     targets = np.concatenate(targets)
     preds = np.concatenate(preds)
     f2_scores = f2_score(targets, preds)
-    val_loss = val_loss.data[0]/(batch_index+1)
+    val_loss = val_loss.data[0]/num_images
     return val_loss, f2_scores
 
 
@@ -112,12 +112,14 @@ def train_baselines(epoch):
         print('[!]Training %s' % name)
         print('[!]Batch size %s' % batch)
         logger = Logger(name=name, save_dir='../log/%s' % name)
-        model = nn.DataParallel(model().cuda())
+        # model = nn.DataParallel(model().cuda())
+        model = model().cuda()
         optimizer = optim.SGD(momentum=0.9, lr=0.1, params=model.parameters(), weight_decay=1e-4)
 
         train_data.batch_size = batch
         val_data.batch_size = batch
 
+        num_images = len(train_data.dataset)
         # start training
         best_loss = np.inf
         patience = 0
@@ -139,14 +141,14 @@ def train_baselines(epoch):
                 loss.backward()
                 optimizer.step()
 
-                training_loss += loss.data[0]
+                training_loss += loss.data[0] * batch
                 if batch_index % 50 == 0:
                     print('Training loss is {}'.format(loss.data[0]))
             print('Finished epoch {}'.format(i))
-            training_loss /= (batch_index+1)
+            training_loss /= num_images
 
             # evaluating
-            val_loss, f2_scores = evaluate_train(model, val_data, criterion)
+            val_loss, f2_scores = evaluate_train(model, val_data, criterion, batch)
 
             if best_loss > val_loss:
                 print('Saving model...')
