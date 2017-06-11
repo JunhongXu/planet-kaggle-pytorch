@@ -29,7 +29,7 @@ def evaluate(model, image):
     return output
 
 
-def split_train_validation(index, num_val=3000):
+def split_train_validation(num_val=3000):
     """
     Save train image names and validation image names to csv files
     """
@@ -39,7 +39,7 @@ def split_train_validation(index, num_val=3000):
     val_idx = 0
     train_idx = 0
     for i in all_idx:
-        if not i in train_image_idx:
+        if i not in train_image_idx:
             validation_image_idx[val_idx] = i
             val_idx += 1
         else:
@@ -47,17 +47,17 @@ def split_train_validation(index, num_val=3000):
     # save train
     train = []
     for name in train_image_idx:
-        train.append('train_%s' % name)
+        train.append('train-<ext>/train_%s.<ext>' % name)
 
     eval = []
     for name in validation_image_idx:
-        eval.append('train_%s' % name)
+        eval.append('train-<ext>/train_%s.<ext>' % name)
 
     df = pds.DataFrame(train)
-    df.to_csv('dataset/train_%s.csv' % index, index=False, header=False)
+    df.to_csv('dataset/train-%s' % (40479 - num_val), index=False, header=False)
 
     df = pds.DataFrame(eval)
-    df.to_csv('dataset/validation_%s.csv' % index, index=False, header=False)
+    df.to_csv('dataset/validation-%s' % num_val, index=False, header=False)
 
 
 def threshold_labels(y, threshold=0.2):
@@ -116,4 +116,4 @@ class Logger(object):
             f.write('{}, {}, {}'.format(start_time, end_time, (end_time - start_time)/60))
 
 if __name__ == '__main__':
-    split_train_validation('all', 0)
+    split_train_validation(3000)
