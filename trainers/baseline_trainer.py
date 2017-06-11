@@ -15,6 +15,7 @@ from util import Logger, f2_score
 import numpy as np
 import torch
 import time
+
 """
 A baseline trainer trains the models as followed:
 1. ResNet: 18, 34, 50, and 152 (from scratch)
@@ -155,6 +156,8 @@ def train_baselines():
 
     for model, batch in zip(models, batch_size):
         name = str(model).split()[1]
+        print('*****Start Training {}******'.format(name))
+        print(' epoch   iter   rate  |  smooth_loss   |  train_loss  (acc)  |  valid_loss  (acc)  | total_train_loss\n')
         logger = Logger('../log/{}'.format(name), name)
 
         net = model()
@@ -163,7 +166,6 @@ def train_baselines():
         num_epoches = 50  #100
         print_every_iter = 20
         epoch_test = 1
-        epoch_save = 5
 
         # optimizer
         optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=0.0005)
@@ -174,7 +176,7 @@ def train_baselines():
         # test_loss = np.nan
         best_test_loss = np.inf
         # test_acc = np.nan
-        time = 0
+        t = time.time()
 
         for epoch in range(num_epoches):  # loop over the dataset multiple times
             # train loss averaged every epoch
@@ -185,6 +187,7 @@ def train_baselines():
             rate = get_learning_rate(optimizer)[0]  # check
 
             sum_smooth_loss = 0.0
+            total_sum = 0
             sum = 0
             net.cuda().train()
 
@@ -201,7 +204,9 @@ def train_baselines():
 
                 # additional metrics
                 sum_smooth_loss += loss.data[0]
+                total_epoch_loss += loss.data[0]
                 sum += 1
+                total_sum += 1
 
                 # print statistics
                 if it % print_every_iter == print_every_iter-1:
@@ -215,17 +220,27 @@ def train_baselines():
                           format(epoch + it/num_its, it + 1, rate, smooth_loss, train_loss, train_acc),
                           end='', flush=True)
 
+            total_epoch_loss = total_epoch_loss / total_sum
             if epoch % epoch_test == epoch_test-1 or epoch == num_epoches-1:
                 net.cuda().eval()
                 test_loss, test_acc = evaluate(net, val_data)
                 print('\r', end='', flush=True)
-                print('{}   {}    {}   |  {}  | {}  {} | {}  {}'.
-                      format(epoch + 1, it + 1, rate, smooth_loss, train_loss, train_acc, test_loss, test_acc))
+                print('{}   {}    {}   |  {}  | {}  {} | {}  {} | {}'.
+                      format(epoch + 1, it + 1, rate, smooth_loss, train_loss, train_acc, test_loss, test_acc,
+                             total_epoch_loss))
 
                 # save if the current loss is better
                 if test_loss < best_test_loss:
                     torch.save(net, '../models/{}.pth'.format(name))
                     best_test_loss = test_loss
+
+            logger.add_record('train_loss', total_epoch_loss)
+            logger.add_record('evaluation_loss', test_loss)
+            logger.add_record('f2_socre', test_acc)
+
+            logger.save()
+            logger.save_plot()
+            logger.save_time(start_time=t, end_time=time.time())
 
 
 if __name__ == '__main__':
