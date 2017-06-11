@@ -156,7 +156,7 @@ def train_baselines():
 
     for model, batch in zip(models, batch_size):
         name = str(model).split()[1]
-        print('*****Start Training {}******'.format(name))
+        print('*****Start Training {} with batch size {}******'.format(name, batch))
         print(' epoch   iter   rate  |  smooth_loss   |  train_loss  (acc)  |  valid_loss  (acc)  | total_train_loss\n')
         logger = Logger('../log/{}'.format(name), name)
 
