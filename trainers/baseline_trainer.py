@@ -163,6 +163,9 @@ def train_baselines():
         net = model()
         net = nn.DataParallel(net.cuda())
 
+        train_data.batch_size = batch
+        val_data.batch_size = batch
+
         num_epoches = 50  #100
         print_every_iter = 20
         epoch_test = 1
