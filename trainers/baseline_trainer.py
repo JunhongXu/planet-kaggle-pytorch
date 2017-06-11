@@ -95,7 +95,7 @@ def evaluate(net, test_loader):
 
 def get_dataloader(batch_size):
     train_data = KgForestDataset(
-        split='train-32479',
+        split='train-37479',
         transform=Compose(
             [
                 Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
@@ -110,7 +110,7 @@ def get_dataloader(batch_size):
     train_data_loader = DataLoader(batch_size=batch_size, dataset=train_data, shuffle=True)
 
     validation = KgForestDataset(
-        split='valid-8000',
+        split='validation-3000',
         transform=Compose(
             [
                 # Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
