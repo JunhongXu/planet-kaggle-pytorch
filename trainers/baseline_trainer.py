@@ -239,7 +239,7 @@ def train_baselines():
 
             logger.add_record('train_loss', total_epoch_loss)
             logger.add_record('evaluation_loss', test_loss)
-            logger.add_record('f2_socre', test_acc)
+            logger.add_record('f2_score', test_acc)
 
             logger.save()
             logger.save_plot()
