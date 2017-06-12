@@ -9,7 +9,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 # from datasets import RandomTranspose, randomFlip, \
 #     train_jpg_loader, validation_jpg_loader, mean, std, toTensor, randomShiftScaleRotate, train_jpg_loader_all
-
+from datasets import mean, std
 from data.kgdataset import KgForestDataset, randomShiftScaleRotate, randomFlip, randomTranspose, toTensor
 from util import Logger, f2_score
 import numpy as np
@@ -41,10 +41,11 @@ A baseline trainer trains the models as followed:
 
 
 models = [
-        resnet18_planet, resnet34_planet, resnet50_planet, resnet152_planet,
+        resnet18_planet, resnet34_planet, resnet50_planet,
         densenet121, densenet169, densenet161,
           ]
-batch_size = [96, 96, 96, 60, 60, 60, 60]
+batch_size = [96, 96, 96, 60,
+                60, 32, 60]
 
 
 # loss ----------------------------------------
@@ -101,7 +102,8 @@ def get_dataloader(batch_size):
                 Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
                 Lambda(lambda x: randomFlip(x)),
                 Lambda(lambda x: randomTranspose(x)),
-                Lambda(lambda x: toTensor(x))
+                Lambda(lambda x: toTensor(x)),
+                Normalize(mean=mean, std=std)
             ]
         ),
         height=256,
@@ -116,7 +118,8 @@ def get_dataloader(batch_size):
                 # Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
                 # Lambda(lambda x: randomFlip(x)),
                 #  Lambda(lambda x: randomTranspose(x)),
-                Lambda(lambda x: toTensor(x))
+                Lambda(lambda x: toTensor(x)),
+                Normalize(mean=mean, std=std)
             ]
         ),
         height=256,
