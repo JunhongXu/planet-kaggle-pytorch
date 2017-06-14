@@ -98,11 +98,11 @@ class KgForestDataset(Dataset):
         return len(self.images)
 
 
-
 def randomVerticalFlip(img, u=0.5):
     if random.random() < u:
-        img = cv2.flip(img,0)  #np.flipud(img)  #cv2.flip(img,0) ##up-down
+        img = cv2.flip(img, 0)  #np.flipud(img)  #cv2.flip(img,0) ##up-down
     return img
+
 
 def randomHorizontalFlip(img, u=0.5):
     shape=img.shape

@@ -3,30 +3,146 @@ from torch.autograd import Variable
 from sklearn.metrics import fbeta_score
 from torch.nn import functional as F
 from matplotlib import pyplot as plt
-import numpy as np
 import pandas as pds
 from datasets import *
 import torch
 import os
-import glob
+from data.kgdataset import KgForestDataset
 from planet_models.resnet_planet import resnet14_planet
-from planet_models.simplenet_v2 import SimpleNetV2
-
-BEST_THRESHOLD= [ 0.2205 , 0.0985 , 0.2495 , 0.2495,  0.281,   0.2055 , 0.0965 , 0.1695 , 0.2055,
-  0.147 ,  0.1135,  0.218  , 0.131  , 0.134 ,  0.1665,  0.1035 , 0.088 ]
-
-BEST_THRESHOLD_SINGLE = [ 0.172,  0.092,  0.221,  0.22,   0.391,  0.203,  0.161,  0.163 , 0.2  ,  0.25,
-  0.165,  0.218  ,0.191  ,0.16 ,  0.19 ,  0.201 , 0.069]
 
 
-def evaluate(model, image):
-    """Evaluate the model given evaluation images and labels"""
-    model.eval()
-    if torch.cuda.is_available():
-        image = image.cuda()
-    image = Variable(image, volatile=True)
-    output = model(image)
-    return output
+def save_results(models, dataloader):
+    """Given model/models, this function saves the result of F.sigmoid(model(x))"""
+    for model in models:
+        name = str(model).split()[1]
+
+        # create
+        model = model()
+        model = nn.DataParallel(model.cuda())
+
+        # load
+        model.load_state_dict(torch.load('models/{}.pth'.format(name)))
+
+        # forward
+        N = dataloader.dataset.num
+        result = []
+        for i, (image, index) in enumerate(dataloader):
+            image = Variable(image.cuda(), volatile=True)
+            # N * 17
+            probs = F.sigmoid(model(image))
+            result.append(probs.data.cpu().numpy())
+
+        # concatenate the probabilities
+        result = np.concatenate(result)
+        # save the probabilities into model.txt file
+        np.savetxt(fname='probs/{}.txt'.format(name), X=result)
+
+
+def optimize_threshold(fnames, labels, resolution):
+    """This function optimizes threshold given dataset and probability files."""
+
+    results = []
+    for f in fnames:
+        # open the file
+        with open(f) as file:
+            lines = file.read().split('\n')[:-1]
+            N = len(lines)
+            result = np.empty((N, 17))
+            for index, line in enumerate(lines):
+                result[index] = np.fromstring(line, dtype=np.float32, sep=' ')
+
+        results.append(result)
+
+    results = np.asarray(results)
+    results = results.mean(axis=0)
+    print(results.shape)
+
+    # optimize threshold, labels N * 17
+    threshold = [0.15] * 17
+    for i in range(17):
+        best_thresh = 0.0
+        best_score = 0.0
+        for r in range(resolution):
+            r /= resolution
+            threshold[i] = r
+            # labels = get_labels(pred, threshold)
+            preds = (results > threshold).dtype(np.int32)
+            score = f2_score(preds, labels)
+            if score > best_score:
+                best_thresh = r
+                best_score = score
+        threshold[i] = best_thresh
+        print(i, best_score, best_thresh)
+    print('{}: {}'.format(best_score, best_thresh))
+    return best_thresh
+
+
+def multi_criterion(logits, labels):
+    loss = nn.MultiLabelSoftMarginLoss()(logits, Variable(labels))
+    return loss
+
+
+def multi_f_measure(probs, labels, threshold=0.235, beta=2):
+    batch_size = probs.size()[0]
+    SMALL = 1e-12
+    l = labels
+    p = (probs > threshold).float()
+    num_pos = torch.sum(p,  1)
+    num_pos_hat = torch.sum(l,  1)
+    tp = torch.sum(l*p,1)
+    precise = tp/(num_pos+ SMALL)
+    recall = tp/(num_pos_hat + SMALL)
+
+    fs = (1+beta*beta)*precise*recall/(beta*beta*precise + recall + SMALL)
+    f = fs.sum()/batch_size
+    return f
+
+
+def evaluate(net, test_loader):
+
+    test_num = 0
+    test_loss = 0
+    test_acc = 0
+    for iter, (images, labels, indices) in enumerate(test_loader, 0):
+
+        # forward
+        logits = net(Variable(images.cuda(), volatile=True))
+        probs = F.sigmoid(logits)
+        loss = multi_criterion(logits, labels.cuda())
+
+        batch_size = len(images)
+        test_acc += batch_size*multi_f_measure(probs.data, labels.cuda())
+        test_loss += batch_size*loss.data[0]
+        test_num += batch_size
+
+    assert(test_num == test_loader.dataset.num)
+    test_acc = test_acc/test_num
+    test_loss = test_loss/test_num
+
+    return test_loss, test_acc
+
+
+def get_learning_rate(optimizer):
+    lr=[]
+    for param_group in optimizer.param_groups:
+       lr +=[ param_group['lr'] ]
+    return lr
+
+
+def lr_schedule(epoch, optimizer):
+    if 0 <= epoch < 10:
+        lr = 1e-1
+    elif 10 <= epoch < 25:
+        lr = 0.01
+    elif 25 <= epoch < 35:
+        lr = 0.005
+    elif 35 <= epoch < 40:
+        lr = 0.001
+    else:
+        lr = 0.0001
+
+    for para_group in optimizer.param_groups:
+        para_group['lr'] = lr
 
 
 def split_train_validation(num_val=3000):
@@ -58,20 +174,6 @@ def split_train_validation(num_val=3000):
 
     df = pds.DataFrame(eval)
     df.to_csv('dataset/validation-%s' % num_val, index=False, header=False)
-
-
-def threshold_labels(y, threshold=0.2):
-    """
-        y is a numpy array of shape N, num_classes, threshold can either be a float or a numpy array
-    """
-
-    if hasattr(threshold, '__iter__'):
-        for i in range(y.shape[-1]):
-            y[:, i] = (y[:, i] > threshold[i]).astype(np.int)
-    else:
-        y[y >= threshold] = 1
-        y[y <= threshold] = 0
-    return y
 
 
 def f2_score(y_true, y_pred):
@@ -115,5 +217,9 @@ class Logger(object):
             f.write('start time, end time, duration\n')
             f.write('{}, {}, {}'.format(start_time, end_time, (end_time - start_time)/60))
 
+
 if __name__ == '__main__':
-    split_train_validation(3000)
+    # a = np.random.randn(100, 17)
+    # np.savetxt('probs/model_1.txt', a)
+    # optimize_threshold(['probs/model_1.txt'], 'data')
+    pass
