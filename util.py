@@ -8,7 +8,8 @@ from datasets import *
 import torch
 import os
 from data.kgdataset import KgForestDataset
-from planet_models.resnet_planet import resnet14_planet
+from planet_models.densenet_planet import densenet169, densenet121, densenet161
+from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet
 
 
 def save_results(models, dataloader):
@@ -24,7 +25,6 @@ def save_results(models, dataloader):
         model.load_state_dict(torch.load('models/{}.pth'.format(name)))
 
         # forward
-        N = dataloader.dataset.num
         result = []
         for i, (image, index) in enumerate(dataloader):
             image = Variable(image.cuda(), volatile=True)
@@ -223,4 +223,20 @@ if __name__ == '__main__':
     # a = np.random.randn(100, 17)
     # np.savetxt('probs/model_1.txt', a)
     # optimize_threshold(['probs/model_1.txt'], 'data')
-    pass
+    validation = KgForestDataset(
+        split='validation-3000',
+        transform=Compose(
+            [
+                # Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
+                # Lambda(lambda x: randomFlip(x)),
+                #  Lambda(lambda x: randomTranspose(x)),
+                Lambda(lambda x: toTensor(x)),
+                Normalize(mean=mean, std=std)
+            ]
+        ),
+        height=256,
+        width=256
+    )
+    dataloader = DataLoader(validation)
+    save_results([resnet18_planet, resnet34_planet, resnet50_planet,
+        densenet121, densenet169, densenet161,], dataloader)
