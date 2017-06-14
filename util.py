@@ -192,6 +192,7 @@ class Logger(object):
         self.save_dict[key].append(value)
 
     def save(self):
+
         df = pd.DataFrame.from_dict(self.save_dict)
         df.to_csv(os.path.join(self.save_dir, '%s.csv' % self.name), header=True, index=False)
 
