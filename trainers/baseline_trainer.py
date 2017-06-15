@@ -113,6 +113,7 @@ def train_baselines():
         logger = Logger('../log/{}'.format(name), name)
 
         net = model()
+        optimizer = get_optimizer(net, lr=.01, pretrained=True, resnet=True if 'resnet' in name else False)
         net = nn.DataParallel(net.cuda())
 
         train_data.batch_size = batch
@@ -135,7 +136,7 @@ def train_baselines():
         t = time.time()
 
         for epoch in range(num_epoches):  # loop over the dataset multiple times
-            optimizer = get_optimizer(net, lr=.01, pretrained=True, resnet=True if 'resnet' in name else False)
+
             # train loss averaged every epoch
             total_epoch_loss = 0.0
 
