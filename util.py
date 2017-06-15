@@ -222,9 +222,6 @@ class Logger(object):
 
 
 if __name__ == '__main__':
-    # a = np.random.randn(100, 17)
-    # np.savetxt('probs/model_1.txt', a)
-    # optimize_threshold(['probs/model_1.txt'], 'data')
     validation = KgForestDataset(
         split='validation-3000',
         transform=Compose(
@@ -239,6 +236,6 @@ if __name__ == '__main__':
         height=256,
         width=256
     )
-    dataloader = DataLoader(validation)
-    save_results([resnet18_planet, resnet34_planet, resnet50_planet,
-        densenet121, densenet169, densenet161,], dataloader)
+    files = ['densenet121.txt', 'densenet161.txt', 'densenet169.txt', 'resnet18_planet.txt',
+             'resnet34_planet.txt', 'resnet50_planet.txt']
+    optimize_threshold(files, resolution=500, labels=validation.labels)
