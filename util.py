@@ -16,20 +16,22 @@ def save_results(models, dataloader):
     """Given model/models, this function saves the result of F.sigmoid(model(x))"""
     for model in models:
         name = str(model).split()[1]
-
         # create
-        model = model()
-        model = nn.DataParallel(model.cuda())
+        # net = model()
+        # net = nn.DataParallel(net.cuda())# nn.DataParallel(densenet169())
+        # net.load_state_dict(torch.load('models/%s.pth' % name)['state_dic'
+        net = torch.load('models/%s.pth' % name)
+        net.eval()
+        # model = nn.DataParallel(model.cuda())
 
         # load
-        model.load_state_dict(torch.load('models/{}.pth'.format(name)))
 
         # forward
         result = []
-        for i, (image, index) in enumerate(dataloader):
+        for i, (image, target, index) in enumerate(dataloader):
             image = Variable(image.cuda(), volatile=True)
             # N * 17
-            probs = F.sigmoid(model(image))
+            probs = F.sigmoid(net(image))
             result.append(probs.data.cpu().numpy())
 
         # concatenate the probabilities
