@@ -1,26 +1,77 @@
-from torchvision.models.resnet import BasicBlock, ResNet, resnet34, resnet50, resnet101, resnet152, resnet18
+from torchvision.models.resnet import BasicBlock, ResNet, resnet34, resnet50, resnet101, resnet152, \
+    resnet18, model_urls, model_zoo
 import torch.nn as nn
 import math
 
 
-def resnet34_planet():
-    return resnet34(False, num_classes=17)
+def resnet34_planet(pretrained=False):
+    model = resnet34(False, num_classes=17)
+    if pretrained:
+        # load model dictionary
+        model_dict = model.state_dict()
+        # load pretrained model
+        pretrained_dict = model_zoo.load_url(model_urls['resnet34'])
+        # update model dictionary using pretrained model without classifier layer
+        model_dict.update({key: pretrained_dict[key] for key in pretrained_dict.keys() if 'fc' not in key})
+        model.load_state_dict(model_dict)
+
+    return model
 
 
-def resnet101_planet():
-    return resnet101(pretrained=False, num_classes=17)
+def resnet101_planet(pretrained=False):
+    model = resnet101(False, num_classes=17)
+    if pretrained:
+        # load model dictionary
+        model_dict = model.state_dict()
+        # load pretrained model
+        pretrained_dict = model_zoo.load_url(model_urls['resnet101'])
+        # update model dictionary using pretrained model without classifier layer
+        model_dict.update({key: pretrained_dict[key] for key in pretrained_dict.keys() if 'fc' not in key})
+        model.load_state_dict(model_dict)
+
+    return model
 
 
-def resnet50_planet():
-    return resnet50(pretrained=False, num_classes=17)
+def resnet50_planet(pretrained=False):
+    model = resnet50(False, num_classes=17)
+    if pretrained:
+        # load model dictionary
+        model_dict = model.state_dict()
+        # load pretrained model
+        pretrained_dict = model_zoo.load_url(model_urls['resnet50'])
+        # update model dictionary using pretrained model without classifier layer
+        model_dict.update({key: pretrained_dict[key] for key in pretrained_dict.keys() if 'fc' not in key})
+        model.load_state_dict(model_dict)
+
+    return model
 
 
-def resnet152_planet():
-    return resnet152(pretrained=False, num_classes=17)
+def resnet152_planet(pretrained=False):
+    model = resnet50(False, num_classes=17)
+    if pretrained:
+        # load model dictionary
+        model_dict = model.state_dict()
+        # load pretrained model
+        pretrained_dict = model_zoo.load_url(model_urls['resnet152'])
+        # update model dictionary using pretrained model without classifier layer
+        model_dict.update({key: pretrained_dict[key] for key in pretrained_dict.keys() if 'fc' not in key})
+        model.load_state_dict(model_dict)
+
+    return model
 
 
-def resnet18_planet():
-    return resnet18(pretrained=False, num_classes=17)
+def resnet18_planet(pretrained=False):
+    model = resnet18(False, num_classes=17)
+    if pretrained:
+        # load model dictionary
+        model_dict = model.state_dict()
+        # load pretrained model
+        pretrained_dict = model_zoo.load_url(model_urls['resnet18'])
+        # update model dictionary using pretrained model without classifier layer
+        model_dict.update({key: pretrained_dict[key] for key in pretrained_dict.keys() if 'fc' not in key})
+        model.load_state_dict(model_dict)
+
+    return model
 
 
 def resnet14_planet():

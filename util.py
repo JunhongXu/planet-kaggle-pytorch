@@ -131,15 +131,25 @@ def get_learning_rate(optimizer):
     return lr
 
 
-def lr_schedule(epoch, optimizer):
-    if 0 <= epoch < 20:
-        lr = 1e-4
-    elif 20 <= epoch < 35:
-        lr = 9e-5
-    elif 35 <= epoch < 45:
-        lr = 5e-5
+def lr_schedule(epoch, optimizer, pretrained=False):
+    if pretrained:
+        if 0 <= epoch < 10:
+            lr = 1e-2
+        elif 10 <= epoch < 25:
+            lr = 5e-3
+        elif 25 <= epoch < 40:
+            lr = 1e-3
+        else:
+            lr = 1e-4
     else:
-        lr = 5e-5
+        if 0 <= epoch < 10:
+            lr = 1e-1
+        elif 10 <= epoch < 25:
+            lr = 5e-2
+        elif 25 <= epoch < 40:
+            lr = 1e-2
+        else:
+            lr = 1e-3
 
     for para_group in optimizer.param_groups:
         para_group['lr'] = lr

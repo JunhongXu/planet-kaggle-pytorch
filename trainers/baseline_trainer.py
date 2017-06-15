@@ -81,6 +81,27 @@ def get_dataloader(batch_size):
     return train_data_loader, valid_dataloader
 
 
+def get_optimizer(net, lr, resnet=False, pretrained=False):
+    if pretrained:
+        if resnet:
+            parameters = [
+                {'params': net.fc.parameters(), 'lr': lr*10},
+                {'params': net.layer1.parameters(), 'lr': lr},
+                {'params': net.layer2.parameters(), 'lr': lr},
+                {'params': net.layer3.parameters(), 'lr': lr},
+                {'params': net.layer4.parameters(), 'lr': lr}
+            ]
+        else:
+            parameters = [
+                {'params': net.features.parameters(), 'lr': lr},
+                {'params': net.classifier.parameters(), 'lr': lr * 10}
+            ]
+        optimizer = optim.SGD(params=parameters, weight_decay=5e-5, momentum=.9)
+    else:
+        optimizer = optim.SGD(params=net.parameters(), lr=lr, weight_decay=5e-5, momentum=.9)
+    return optimizer
+
+
 def train_baselines():
 
     train_data, val_data = get_dataloader(96)
@@ -103,7 +124,7 @@ def train_baselines():
 
         # optimizer
         # optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=0.0005)
-        optimizer = optim.Adam(net.parameters(), lr=1e-4, weight_decay=5e-4)
+        # optimizer = optim.Adam(net.parameters(), lr=1e-4, weight_decay=5e-4)
 
         smooth_loss = 0.0
         train_loss = np.nan
@@ -114,10 +135,11 @@ def train_baselines():
         t = time.time()
 
         for epoch in range(num_epoches):  # loop over the dataset multiple times
+            optimizer = get_optimizer(net, lr=.01, pretrained=True, resnet=True if 'resnet' in name else False)
             # train loss averaged every epoch
             total_epoch_loss = 0.0
 
-            # lr_schedule(epoch, optimizer)
+            lr_schedule(epoch, optimizer, pretrained=True)
 
             rate = get_learning_rate(optimizer)[0]  # check
 
