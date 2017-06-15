@@ -21,7 +21,7 @@ A baseline trainer trains the models as followed:
 -------parameters---------
     epochs: 80
 
-    batch size: 96, 96, 96, 60, 60, 60, 60
+    batch size: 128, 128, 128, 64, 64, 64, 64
 
     use SGD+0.9momentum w/o nestrov
 
@@ -41,8 +41,8 @@ models = [
         resnet18_planet, resnet34_planet, resnet50_planet,
         densenet121, densenet169, densenet161,
           ]
-batch_size = [96, 96, 96, 60,
-                60, 32, 60]
+batch_size = [128, 128, 128, 64,
+                64, 64, 64]
 
 
 def get_dataloader(batch_size):
@@ -97,12 +97,13 @@ def train_baselines():
         train_data.batch_size = batch
         val_data.batch_size = batch
 
-        num_epoches = 50  #100
+        num_epoches = 100  #100
         print_every_iter = 20
         epoch_test = 1
 
         # optimizer
-        optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=0.0005)
+        # optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=0.0005)
+        optimizer = optim.Adam(net.parameters(), lr=1e-4, weight_decay=5e-4)
 
         smooth_loss = 0.0
         train_loss = np.nan
@@ -116,7 +117,7 @@ def train_baselines():
             # train loss averaged every epoch
             total_epoch_loss = 0.0
 
-            lr_schedule(epoch, optimizer)
+            # lr_schedule(epoch, optimizer)
 
             rate = get_learning_rate(optimizer)[0]  # check
 
@@ -165,7 +166,7 @@ def train_baselines():
 
                 # save if the current loss is better
                 if test_loss < best_test_loss:
-                    torch.save(net, '../models/{}.pth'.format(name))
+                    torch.save(net.state_dict(), '../models/{}.pth'.format(name))
                     best_test_loss = test_loss
 
             logger.add_record('train_loss', total_epoch_loss)

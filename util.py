@@ -68,7 +68,7 @@ def optimize_threshold(fnames, labels, resolution):
             r /= resolution
             threshold[i] = r
             # labels = get_labels(pred, threshold)
-            preds = (results > threshold).dtype(np.int32)
+            preds = (results > threshold).astype(np.int32)
             score = f2_score(preds, labels)
             if score > best_score:
                 best_thresh = r
@@ -132,16 +132,14 @@ def get_learning_rate(optimizer):
 
 
 def lr_schedule(epoch, optimizer):
-    if 0 <= epoch < 10:
-        lr = 1e-1
-    elif 10 <= epoch < 25:
-        lr = 0.01
-    elif 25 <= epoch < 35:
-        lr = 0.005
-    elif 35 <= epoch < 40:
-        lr = 0.001
+    if 0 <= epoch < 20:
+        lr = 1e-4
+    elif 20 <= epoch < 35:
+        lr = 9e-5
+    elif 35 <= epoch < 45:
+        lr = 5e-5
     else:
-        lr = 0.0001
+        lr = 5e-5
 
     for para_group in optimizer.param_groups:
         para_group['lr'] = lr
@@ -236,6 +234,6 @@ if __name__ == '__main__':
         height=256,
         width=256
     )
-    files = ['densenet121.txt', 'densenet161.txt', 'densenet169.txt', 'resnet18_planet.txt',
-             'resnet34_planet.txt', 'resnet50_planet.txt']
+    files = ['probs/densenet121.txt', 'probs/densenet161.txt', 'probs/densenet169.txt', 'probs/resnet18_planet.txt',
+             'probs/resnet34_planet.txt', 'probs/resnet50_planet.txt']
     optimize_threshold(files, resolution=500, labels=validation.labels)
