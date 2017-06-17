@@ -3,7 +3,7 @@ import torch.nn as nn
 from trainers.train_densenet import densenet121
 from planet_models.densenet_planet import *
 from planet_models.resnet_planet import *
-from planet_models.simplenet_v3 import SimpleNetV3
+from torch.autograd import Variable
 from planet_models.simplenet_v2 import *
 from datasets import *
 from trainers.train_simplenet import evaluate
@@ -77,7 +77,9 @@ def optimize_threshold(models, datasets, resolution=1000):
     for batch_index, data in enumerate(zip(*datasets)):
         output = 0.0
         for index, (image, target, _) in enumerate(data):
-            output += F.sigmoid(evaluate(models[index], image))
+            # output += F.sigmoid(evaluate(models[index], image))
+            image = Variable(image.cuda(), volitale=True)
+            output += F.sigmoid(models[index](image))
 
         output = output/len(models)
         pred.append(output.data.cpu().numpy())
