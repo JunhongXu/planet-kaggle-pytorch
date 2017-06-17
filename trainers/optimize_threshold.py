@@ -74,16 +74,16 @@ def optimize_threshold(models, datasets, resolution=1000):
     pred = []
     targets = []
     # predict
-    for batch_index, data in enumerate(zip(*datasets)):
+    for index, data in enumerate(zip(*datasets)):
         output = 0.0
-        for index, (image, target, _) in enumerate(data):
+        for batch_index, (image, target, _) in enumerate(data):
             # output += F.sigmoid(evaluate(models[index], image))
             image = Variable(image.cuda(), volatile=True)
-            output += F.sigmoid(models[index](image))
+            output = F.sigmoid(models[index](image))
 
-        output = output/len(models)
-        pred.append(output.data.cpu().numpy())
-        targets.append(target.cpu().numpy())
+        # output = output/len(models)
+            pred.append(output.data.cpu().numpy())
+            targets.append(target.cpu().numpy())
 
     pred = np.vstack(pred)
     targets = np.vstack(targets)
