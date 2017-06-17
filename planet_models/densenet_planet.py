@@ -36,7 +36,7 @@ def densenet161(num_classes=17, pretrained=False):
         # load model dictionary
         model_dict = model.state_dict()
         # load pretrained model
-        pretrained_dict = model_zoo.load_url(model_urls['densenet169'])
+        pretrained_dict = model_zoo.load_url(model_urls['densenet161'])
         # update model dictionary using pretrained model without classifier layer
         model_dict.update({key: pretrained_dict[key] for key in pretrained_dict.keys() if 'classifier' not in key})
         model.load_state_dict(model_dict)
