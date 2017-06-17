@@ -112,7 +112,7 @@ def train_baselines():
         print(' epoch   iter   rate  |  smooth_loss   |  train_loss  (acc)  |  valid_loss  (acc)  | total_train_loss\n')
         logger = Logger('../log/{}'.format(name), name)
 
-        net = model()
+        net = model(pretrained=True)
         optimizer = get_optimizer(net, lr=.01, pretrained=True, resnet=True if 'resnet' in name else False)
         net = nn.DataParallel(net.cuda())
 
