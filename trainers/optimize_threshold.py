@@ -103,29 +103,30 @@ def optimize_threshold(models, datasets, resolution=1000):
 
 
 if __name__ == '__main__':
-    model1 = nn.DataParallel(densenet169(pretrained=False).cuda())
-    model1.load_state_dict(torch.load('../models/pretrained_densenet169_wd_1e-4.pth'))
+    model1 = nn.DataParallel(densenet161(pretrained=False).cuda())
+    model1.load_state_dict(torch.load('../models/densenet161.pth'))
     model1.eval()
-    model2 = nn.DataParallel(SimpleNetV3().cuda())
-    model2.load_state_dict(torch.load('../models/simplenet_v3.1.pth'))
-    model2.eval()
-    models = [model1, model2]
+    # model2 = nn.DataParallel(SimpleNetV3().cuda())
+    # model2.load_state_dict(torch.load('../models/simplenet_v3.1.pth'))
+    # model2.eval()
+    models = [model1, # model2
+              ]
 
     datasets = [
         validation_jpg_loader(512, transform=Compose([
-            Scale(224),
+            Scale(256),
             RandomHorizontalFlip(),
             ToTensor(),
             Normalize(mean, std)
         ])),
-        validation_jpg_loader(
-         512, transform=Compose(
-             [
-                 Scale(72),
-                 RandomHorizontalFlip(),
-                 ToTensor(),
-                 Normalize(mean, std)
-             ]))
+        # validation_jpg_loader(
+        #  512, transform=Compose(
+        #      [
+        #          Scale(72),
+        #          RandomHorizontalFlip(),
+        #          ToTensor(),
+        #          Normalize(mean, std)
+        #      ]))
                 ]
     threshold = np.zeros(17)
     for i in range(0,10):
