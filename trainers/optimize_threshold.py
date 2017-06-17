@@ -76,7 +76,7 @@ def optimize_threshold(models, datasets, resolution=1000):
     # predict
     for batch_index, data in enumerate(zip(*datasets)):
         output = 0.0
-        for index, (image, target) in enumerate(data):
+        for index, (image, target, _) in enumerate(data):
             output += F.sigmoid(evaluate(models[index], image))
 
         output = output/len(models)
