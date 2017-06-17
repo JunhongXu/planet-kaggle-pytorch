@@ -9,6 +9,7 @@ from datasets import *
 from trainers.train_simplenet import evaluate
 import torch.nn.functional as F
 from util import f2_score
+from data.kgdataset import KgForestDataset, randomTranspose, randomFlip
 
 
 def optimize_threshold_single(resolution=1000):
@@ -113,12 +114,20 @@ if __name__ == '__main__':
               ]
 
     datasets = [
-        validation_jpg_loader(512, transform=Compose([
-            Scale(256),
-            RandomHorizontalFlip(),
-            ToTensor(),
-            Normalize(mean, std)
-        ])),
+        DataLoader(KgForestDataset(
+        split='validation-3000',
+        transform=Compose(
+            [
+                # Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
+                Lambda(lambda x: randomFlip(x)),
+                Lambda(lambda x: randomTranspose(x)),
+                Lambda(lambda x: toTensor(x)),
+                Normalize(mean=mean, std=std)
+            ]
+        ),
+        height=256,
+        width=256
+    )),
         # validation_jpg_loader(
         #  512, transform=Compose(
         #      [
