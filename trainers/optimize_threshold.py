@@ -78,7 +78,7 @@ def optimize_threshold(models, datasets, resolution=1000):
         output = 0.0
         for index, (image, target, _) in enumerate(data):
             # output += F.sigmoid(evaluate(models[index], image))
-            image = Variable(image.cuda(), volitale=True)
+            image = Variable(image.cuda(), volatile=True)
             output += F.sigmoid(models[index](image))
 
         output = output/len(models)
