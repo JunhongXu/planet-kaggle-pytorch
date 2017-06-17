@@ -38,11 +38,13 @@ A baseline trainer trains the models as followed:
 
 
 models = [
-        resnet18_planet, resnet34_planet, resnet50_planet,
+        # resnet18_planet, resnet34_planet,
+        resnet50_planet,
         densenet121, densenet169, densenet161,
           ]
-batch_size = [128, 128, 128, 64,
-                64, 64, 64]
+batch_size = [# 128, 128,
+                72, 64,
+                64, 64]
 
 
 def get_dataloader(batch_size):
@@ -119,7 +121,7 @@ def train_baselines():
         train_data.batch_size = batch
         val_data.batch_size = batch
 
-        num_epoches = 100  #100
+        num_epoches = 50  #100
         print_every_iter = 20
         epoch_test = 1
 
