@@ -38,11 +38,11 @@ A baseline trainer trains the models as followed:
 
 
 models = [
-        # resnet18_planet, resnet34_planet,
+        resnet18_planet, resnet34_planet,
         resnet50_planet,
         densenet121, densenet169, densenet161,
           ]
-batch_size = [# 128, 128,
+batch_size = [128, 128,
                 72, 64,
                 64, 64]
 
@@ -191,7 +191,11 @@ def train_baselines():
 
                 # save if the current loss is better
                 if test_loss < best_test_loss:
+                    print('save {} {}'.format(test_loss, best_test_loss))
                     torch.save(net.state_dict(), '../models/{}.pth'.format(name))
+                    net.load_state_dict(torch.load('../models/{}.pth'.format(name)))
+                    print(evaluate(net, val_data))
+
                     best_test_loss = test_loss
 
             logger.add_record('train_loss', total_epoch_loss)

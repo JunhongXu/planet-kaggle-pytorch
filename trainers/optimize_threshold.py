@@ -9,8 +9,8 @@ from datasets import *
 from trainers.train_simplenet import evaluate
 import torch.nn.functional as F
 from util import f2_score
-from data.kgdataset import KgForestDataset, randomTranspose, randomFlip
-
+from data.kgdataset import KgForestDataset, randomTranspose, randomFlip, toTensor
+from trainers.baseline_trainer import get_dataloader
 
 def optimize_threshold_single(resolution=1000):
     """
@@ -74,16 +74,20 @@ def optimize_threshold(models, datasets, resolution=1000):
     pred = []
     targets = []
     # predict
-    for index, data in enumerate(zip(*datasets)):
-        output = 0.0
-        for batch_index, (image, target, _) in enumerate(data):
-            # output += F.sigmoid(evaluate(models[index], image))
-            image = Variable(image.cuda(), volatile=True)
-            output = F.sigmoid(models[index](image))
-
+    # for index, data in enumerate(zip(*datasets)):
+    for batch_index, (image, target, _) in enumerate(datasets[0]):
+        # output += F.sigmoid(evaluate(models[index], image))
+        image = Variable(image.cuda(), volatile=True)
+        output = F.sigmoid(models[0](image))
+        # print(output[0].data)
+        # print(target[0])
+        # output = output.data.cpu().numpy()
+        # target = target.cpu().numpy()
+        # print(f2_score(target, (output > 0.2).astype(int)))
+        # print(target)
         # output = output/len(models)
-            pred.append(output.data.cpu().numpy())
-            targets.append(target.cpu().numpy())
+        pred.append(output.data.cpu().numpy())
+        targets.append(target.cpu().numpy())
 
     pred = np.vstack(pred)
     targets = np.vstack(targets)
@@ -95,7 +99,7 @@ def optimize_threshold(models, datasets, resolution=1000):
         for r in range(resolution):
             r /= resolution
             threshold[i] = r
-            labels = get_labels(pred, threshold)
+            labels = (pred > threshold).astype(int)
             score = f2_score(targets, labels)
             if score > best_score:
                 best_thresh = r
@@ -106,17 +110,10 @@ def optimize_threshold(models, datasets, resolution=1000):
 
 
 if __name__ == '__main__':
-    model1 = nn.DataParallel(densenet161(pretrained=False).cuda())
+    model1 = nn.DataParallel(densenet161(pretrained=True).cuda())
     model1.load_state_dict(torch.load('../models/densenet161.pth'))
-    model1.eval()
-    # model2 = nn.DataParallel(SimpleNetV3().cuda())
-    # model2.load_state_dict(torch.load('../models/simplenet_v3.1.pth'))
-    # model2.eval()
-    models = [model1, # model2
-              ]
-
-    datasets = [
-        DataLoader(KgForestDataset(
+    model1.cuda().eval()
+    validation = KgForestDataset(
         split='validation-3000',
         transform=Compose(
             [
@@ -129,18 +126,13 @@ if __name__ == '__main__':
         ),
         height=256,
         width=256
-    )),
-        # validation_jpg_loader(
-        #  512, transform=Compose(
-        #      [
-        #          Scale(72),
-        #          RandomHorizontalFlip(),
-        #          ToTensor(),
-        #          Normalize(mean, std)
-        #      ]))
-                ]
+    )
+
+    valid_dataloader = DataLoader(dataset=validation, shuffle=False, batch_size=512)
+
     threshold = np.zeros(17)
-    for i in range(0,10):
-        threshold = threshold + np.array(optimize_threshold(models=models, datasets=datasets, resolution=200))
-    threshold = threshold / 10
-    print(list(threshold))
+    for i in range(10):
+        threshold += optimize_threshold([model1], [valid_dataloader])
+    print(threshold/10)
+
+
