@@ -7,76 +7,31 @@ import pandas as pds
 from datasets import *
 import torch
 import os
-from data.kgdataset import KgForestDataset
-from planet_models.densenet_planet import densenet169, densenet121, densenet161
-from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet
+from data.kgdataset import CLASS_NAMES, KAGGLE_DATA_DIR
+import pandas as pd
 
 
-def save_results(models, dataloader):
-    """Given model/models, this function saves the result of F.sigmoid(model(x))"""
-    for model in models:
-        name = str(model).split()[1]
-        # create
-        # net = model()
-        # net = nn.DataParallel(net.cuda())# nn.DataParallel(densenet169())
-        # net.load_state_dict(torch.load('models/%s.pth' % name)['state_dic'
-        net = torch.load('models/%s.pth' % name)
-        net.eval()
-        # model = nn.DataParallel(model.cuda())
-
-        # load
-
-        # forward
-        result = []
-        for i, (image, target, index) in enumerate(dataloader):
-            image = Variable(image.cuda(), volatile=True)
-            # N * 17
-            probs = F.sigmoid(net(image))
-            result.append(probs.data.cpu().numpy())
-
-        # concatenate the probabilities
-        result = np.concatenate(result)
-        # save the probabilities into model.txt file
-        np.savetxt(fname='probs/{}.txt'.format(name), X=result)
+def name_idx():
+    return {name: idx for idx, name in enumerate(CLASS_NAMES)}
 
 
-def optimize_threshold(fnames, labels, resolution):
-    """This function optimizes threshold given dataset and probability files."""
+def idx_name():
+    return {idx: name for idx, name in enumerate(CLASS_NAMES)}
 
-    results = []
-    for f in fnames:
-        # open the file
-        with open(f) as file:
-            lines = file.read().split('\n')[:-1]
-            N = len(lines)
-            result = np.empty((N, 17))
-            for index, line in enumerate(lines):
-                result[index] = np.fromstring(line, dtype=np.float32, sep=' ')
 
-        results.append(result)
-
-    results = np.asarray(results)
-    results = results.mean(axis=0)
-    print(results.shape)
-
-    # optimize threshold, labels N * 17
-    threshold = [0.15] * 17
-    for i in range(17):
-        best_thresh = 0.0
-        best_score = 0.0
-        for r in range(resolution):
-            r /= resolution
-            threshold[i] = r
-            # labels = get_labels(pred, threshold)
-            preds = (results > threshold).astype(np.int32)
-            score = f2_score(preds, labels)
-            if score > best_score:
-                best_thresh = r
-                best_score = score
-        threshold[i] = best_thresh
-        print(i, best_score, best_thresh)
-    print('{}: {}'.format(best_score, best_thresh))
-    return best_thresh
+def pred_csv(predictions, threshold, name):
+    """
+    predictions: numpy array of predicted probabilities
+    """
+    csv_name = os.path.join('submission.csv')
+    submission = pd.read_csv(csv_name)
+    for i, pred in enumerate(predictions):
+        labels = (pred > threshold).astype(int)
+        labels = np.where(labels == 1)[0]
+        labels = ' '.join(idx_name()[index] for index in labels)
+        submission['tags'][i] = labels
+        print('Index ', i)
+    submission.to_csv(os.path.join('submissions', '{}.csv'.format(name)))
 
 
 def multi_criterion(logits, labels):
@@ -230,20 +185,7 @@ class Logger(object):
 
 
 if __name__ == '__main__':
-    validation = KgForestDataset(
-        split='validation-3000',
-        transform=Compose(
-            [
-                # Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
-                # Lambda(lambda x: randomFlip(x)),
-                #  Lambda(lambda x: randomTranspose(x)),
-                Lambda(lambda x: toTensor(x)),
-                Normalize(mean=mean, std=std)
-            ]
-        ),
-        height=256,
-        width=256
-    )
+
     files = ['probs/densenet121.txt', 'probs/densenet161.txt', 'probs/densenet169.txt', 'probs/resnet18_planet.txt',
              'probs/resnet34_planet.txt', 'probs/resnet50_planet.txt']
-    optimize_threshold(files, resolution=500, labels=validation.labels)
+    pred_csv(np.random.randn(2, 6), 0, 0)
