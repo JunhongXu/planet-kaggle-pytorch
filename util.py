@@ -23,15 +23,16 @@ def pred_csv(predictions, threshold, name):
     """
     predictions: numpy array of predicted probabilities
     """
-    csv_name = os.path.join('submission.csv')
+    csv_name = os.path.join(KAGGLE_DATA_DIR, 'sample_submission.csv')
     submission = pd.read_csv(csv_name)
+    print(submission)
     for i, pred in enumerate(predictions):
         labels = (pred > threshold).astype(int)
         labels = np.where(labels == 1)[0]
         labels = ' '.join(idx_name()[index] for index in labels)
         submission['tags'][i] = labels
         print('Index ', i)
-    submission.to_csv(os.path.join('submissions', '{}.csv'.format(name)))
+    submission.to_csv(os.path.join('submissions', '{}.csv'.format(name)), index=False)
 
 
 def multi_criterion(logits, labels):

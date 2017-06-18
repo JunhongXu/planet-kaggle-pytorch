@@ -30,16 +30,19 @@ def test():
         ), height=256, width=256, label_csv=None
     )
 
-    test_loader = DataLoader(dataset, batch_size=512, shuffle=False, num_workers=3)
+    test_loader = DataLoader(dataset, batch_size=512, shuffle=False, pin_memory=True)
 
-    probs = []
+    probs = np.empty((61191, 17))
+    current = 0
     for batch_idx, (images, im_ids) in enumerate(test_loader):
-        logits = net(Variable(images.cuda(), volatile=False))
+        num = images.size(0)
+        previous = current
+        current = previous + num
+        logits = net(Variable(images.cuda(), volatile=True))
         prob = F.sigmoid(logits)
-        probs.append(prob)
+        probs[previous:current, :] = prob.data.cpu().numpy()
         print('Batch Index ', batch_idx)
 
-    probs = np.concatenate(probs)
     pred_csv(probs, name='densenet161', threshold=BEST_THRESHOLD)
         # result = evaluate(model, images)
         # result = F.sigmoid(result)
