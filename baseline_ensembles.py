@@ -177,7 +177,7 @@ def do_thresholding(names, labels):
     for t_idx in range(len(transforms)):
         for m_idx in range(len(models)):
             preds[t_idx, m_idx] = np.loadtxt(names[t_idx + m_idx])
-    print(file_names)
+    print(names)
     t = find_best_threshold(labels=labels, probabilities=preds)
     return t
 
