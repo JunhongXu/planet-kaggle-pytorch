@@ -21,9 +21,9 @@ def idx_name():
 
 def predict(net, dataloader):
     num = dataloader.dataset.num
-    probs = np.empty(num, 17)
+    probs = np.empty((num, 17))
     current = 0
-    for batch_idx, (images, im_ids) in enumerate(dataloader):
+    for batch_idx, (images, im_ids, _) in enumerate(dataloader):
         num = images.size(0)
         previous = current
         current = previous + num

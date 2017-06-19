@@ -86,7 +86,7 @@ def probs(dataloader):
     n_models = len(models)
     n_imgs = dataloader.dataset.num
     imgs = dataloader.dataset.images.copy()
-    probabilities = np.empty(n_transforms, n_models, n_imgs, 17)
+    probabilities = np.empty((n_transforms, n_models, n_imgs, 17))
     for t_idx, transform in enumerate(transforms):
         t_name = str(transform).split()[1]
         dataloader.dataset.images = transform(imgs)
@@ -94,8 +94,8 @@ def probs(dataloader):
             name = str(model).split()[1]
             net = model().cuda()
             net = nn.DataParallel(net)
-            net = net.load_state_dict(torch.load('models/{}.pth'.format(name)))
-
+            net.load_state_dict(torch.load('models/{}.pth'.format(name)))
+            net.eval()
             # predict
             m_predictions = predict(net, dataloader)
 
@@ -121,5 +121,5 @@ if __name__ == '__main__':
         height=256,
         width=256
     )
-    valid_dataloader = DataLoader(validation, batch_size=512, shuffle=False)
+    valid_dataloader = DataLoader(validation, batch_size=256, shuffle=False)
     print(probs(valid_dataloader))
