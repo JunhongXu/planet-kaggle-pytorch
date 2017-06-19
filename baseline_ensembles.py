@@ -193,6 +193,7 @@ def predict_test(t):
     for index, model in enumerate(models):
         name = str(model).split()[1]
         net = nn.DataParallel(model().cuda())
+        net.eval()
         net.load_state_dict(torch.load('models/{}.pth'.format(name)))
         pred = predict(dataloader=test_dataloader, net=net)
         preds = preds + pred
