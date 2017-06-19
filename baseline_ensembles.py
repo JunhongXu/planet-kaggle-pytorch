@@ -9,7 +9,7 @@ from torchvision.transforms import Normalize, Compose, Lambda
 import glob
 from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet
 from planet_models.densenet_planet import densenet161, densenet121, densenet169
-from util import predict, f2_score
+from util import predict, f2_score, pred_csv
 
 
 def default(imgs):
@@ -51,6 +51,13 @@ def verticalFlip(imgs):
 
 mean = [0.31151703, 0.34061992, 0.29885209]
 std = [0.16730586, 0.14391145, 0.13747531]
+threshold = [0.23166666666666666, 0.19599999999999998, 0.18533333333333335,
+             0.08033333333333334, 0.20199999999999999, 0.16866666666666666,
+             0.20533333333333334, 0.27366666666666667, 0.2193333333333333,
+             0.21299999999999999, 0.15666666666666665, 0.096666666666666679,
+             0.21933333333333335, 0.058666666666666673, 0.19033333333333333,
+             0.25866666666666666, 0.057999999999999996]
+
 transforms = [default, rotate90, rotate180, rotate270, verticalFlip, horizontalFlip]
 models = [resnet34_planet, resnet50_planet, densenet121, densenet161, densenet169]
 
@@ -140,26 +147,48 @@ def find_best_threshold(labels, probabilities):
 
 
 if __name__ == '__main__':
-    validation = KgForestDataset(
-        split='validation-3000',
+    # validation = KgForestDataset(
+    #     split='validation-3000',
+    #     transform=Compose(
+    #         [
+    #             Lambda(lambda x: toTensor(x)),
+    #             Normalize(mean=mean, std=std)
+    #         ]
+    #     ),
+    #     height=256,
+    #     width=256
+    # )
+    # valid_dataloader = DataLoader(validation, batch_size=256, shuffle=False)
+    # # print(probs(valid_dataloader))
+    # file_names = glob.glob('probs/*.txt')
+    # file_names = [name for name in file_names if 'resnet18' not in name]
+    # preds = np.empty((len(transforms), len(models), 3000, 17))
+    # for t_idx in range(len(transforms)):
+    #     for m_idx in range(len(models)):
+    #         preds[t_idx, m_idx] = np.loadtxt(file_names[t_idx + m_idx])
+    # print(file_names)
+    # t = find_best_threshold(labels=validation.labels, probabilities=preds)
+    # print(list(t))
+    # # print(np.loadtxt('probs/default_densenet121.txt').shape)
+
+    test_dataset = KgForestDataset(
+        split='test-61191',
         transform=Compose(
             [
                 Lambda(lambda x: toTensor(x)),
                 Normalize(mean=mean, std=std)
             ]
-        ),
-        height=256,
-        width=256
+        )
     )
-    valid_dataloader = DataLoader(validation, batch_size=256, shuffle=False)
-    # print(probs(valid_dataloader))
-    file_names = glob.glob('probs/*.txt')
-    file_names = [name for name in file_names if 'resnet18' not in name]
-    preds = np.empty((len(transforms), len(models), 3000, 17))
-    for t_idx in range(len(transforms)):
-        for m_idx in range(len(models)):
-            preds[t_idx, m_idx] = np.loadtxt(file_names[t_idx + m_idx])
-    print(file_names)
-    t = find_best_threshold(labels=validation.labels, probabilities=preds)
-    print(list(t))
-    # print(np.loadtxt('probs/default_densenet121.txt').shape)
+
+    test_dataloader = DataLoader(test_dataset, batch_size=512)
+    preds = np.zeros((61191, 17))
+    for index, model in enumerate(models):
+        name = str(model).split()[1]
+        net = nn.DataParallel(model().cuda())
+        net.load_state_dict(torch.load('models/{}.pth'.format(name)))
+        pred = predict(dataloader=test_dataloader, net=net)
+        preds = preds + pred
+
+    preds = preds/len(models)
+    pred_csv(predictions=preds, threshold=threshold, name='ensembles')

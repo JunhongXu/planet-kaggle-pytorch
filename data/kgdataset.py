@@ -88,7 +88,7 @@ class KgForestDataset(Dataset):
             img = self.transform(img)
 
         if self.labels is None:
-            return img, index
+            return img, index, 0
 
         else:
             label = self.labels[index]
