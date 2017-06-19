@@ -3,7 +3,6 @@ from planet_models.resnet_planet import *
 from torch.autograd import Variable
 from planet_models.simplenet_v2 import *
 from datasets import *
-from trainers.train_simplenet import evaluate
 import torch.nn.functional as F
 from util import f2_score
 from data.kgdataset import KgForestDataset, randomTranspose, randomFlip, toTensor

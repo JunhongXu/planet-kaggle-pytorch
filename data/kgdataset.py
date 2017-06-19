@@ -98,6 +98,7 @@ class KgForestDataset(Dataset):
         return len(self.images)
 
 
+################################# Transformations begin here ################################
 def randomVerticalFlip(img, u=0.5):
     if random.random() < u:
         img = cv2.flip(img, 0)  #np.flipud(img)  #cv2.flip(img,0) ##up-down
@@ -105,7 +106,6 @@ def randomVerticalFlip(img, u=0.5):
 
 
 def randomHorizontalFlip(img, u=0.5):
-    shape=img.shape
     if random.random() < u:
         img = cv2.flip(img,1)  #np.fliplr(img)  #cv2.flip(img,1) ##left-right
     return img
@@ -210,7 +210,6 @@ def randomShiftScaleRotate(img, u=0.5, shift_limit=4, scale_limit=0.1, rotate_li
         ss = math.sin(angle/180*math.pi)*(scale)
         rotate_matrix = np.array([ [cc,-ss], [ss,cc] ])
 
-
         box0 = np.array([ [0,0], [width,0],  [width,height], [0,height], ])
         box1 = box0 - np.array([width/2,height/2])
         box1 = np.dot(box1,rotate_matrix.T) + np.array([width/2+dx,height/2+dy])
@@ -221,7 +220,6 @@ def randomShiftScaleRotate(img, u=0.5, shift_limit=4, scale_limit=0.1, rotate_li
         img = cv2.warpPerspective(img, mat, (width,height),flags=cv2.INTER_LINEAR,borderMode=cv2.BORDER_REFLECT_101)  #cv2.BORDER_CONSTANT, borderValue = (0, 0, 0))  #cv2.BORDER_REFLECT_101
 
     return img
-
 
 
 def cropCenter(img, height, width):

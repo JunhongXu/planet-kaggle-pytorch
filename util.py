@@ -19,6 +19,21 @@ def idx_name():
     return {idx: name for idx, name in enumerate(CLASS_NAMES)}
 
 
+def predict(net, dataloader):
+    num = dataloader.dataset.num
+    probs = np.empty(num, 17)
+    current = 0
+    for batch_idx, (images, im_ids) in enumerate(dataloader):
+        num = images.size(0)
+        previous = current
+        current = previous + num
+        logits = net(Variable(images.cuda(), volatile=True))
+        prob = F.sigmoid(logits)
+        probs[previous:current, :] = prob.data.cpu().numpy()
+        print('Batch Index ', batch_idx)
+    return probs
+
+
 def pred_csv(predictions, threshold, name):
     """
     predictions: numpy array of predicted probabilities
