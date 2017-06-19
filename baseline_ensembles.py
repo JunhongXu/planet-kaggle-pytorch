@@ -179,7 +179,7 @@ if __name__ == '__main__':
                 Normalize(mean=mean, std=std)
             ]
         )
-    )
+    , label_csv=None)
 
     test_dataloader = DataLoader(test_dataset, batch_size=512)
     preds = np.zeros((61191, 17))
