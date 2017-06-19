@@ -82,7 +82,6 @@ models = [resnet34_planet, resnet50_planet, densenet121, densenet161, densenet16
 #
 #     cv2.waitKey()
 
-
 # save probabilities to files for debug
 def probs(dataloader):
     """
@@ -141,36 +140,23 @@ def find_best_threshold(labels, probabilities):
     return threshold
 
 
+def get_validation_loader():
+    validation = KgForestDataset(
+        split='validation-3000',
+        transform=Compose(
+            [
+                Lambda(lambda x: toTensor(x)),
+                Normalize(mean=mean, std=std)
+            ]
+        ),
+        height=256,
+        width=256
+    )
+    valid_dataloader = DataLoader(validation, batch_size=256, shuffle=False)
+    return valid_dataloader
 
 
-# optimize the results
-
-
-if __name__ == '__main__':
-    # validation = KgForestDataset(
-    #     split='validation-3000',
-    #     transform=Compose(
-    #         [
-    #             Lambda(lambda x: toTensor(x)),
-    #             Normalize(mean=mean, std=std)
-    #         ]
-    #     ),
-    #     height=256,
-    #     width=256
-    # )
-    # valid_dataloader = DataLoader(validation, batch_size=256, shuffle=False)
-    # # print(probs(valid_dataloader))
-    # file_names = glob.glob('probs/*.txt')
-    # file_names = [name for name in file_names if 'resnet18' not in name]
-    # preds = np.empty((len(transforms), len(models), 3000, 17))
-    # for t_idx in range(len(transforms)):
-    #     for m_idx in range(len(models)):
-    #         preds[t_idx, m_idx] = np.loadtxt(file_names[t_idx + m_idx])
-    # print(file_names)
-    # t = find_best_threshold(labels=validation.labels, probabilities=preds)
-    # print(list(t))
-    # # print(np.loadtxt('probs/default_densenet121.txt').shape)
-
+def get_test_dataloader():
     test_dataset = KgForestDataset(
         split='test-61191',
         transform=Compose(
@@ -178,10 +164,31 @@ if __name__ == '__main__':
                 Lambda(lambda x: toTensor(x)),
                 Normalize(mean=mean, std=std)
             ]
-        )
-    , label_csv=None)
+        ),
+        label_csv=None
+    )
 
     test_dataloader = DataLoader(test_dataset, batch_size=512)
+    return test_dataloader
+
+
+def do_thresholding(names, labels):
+    preds = np.empty((len(transforms), len(models), 3000, 17))
+    for t_idx in range(len(transforms)):
+        for m_idx in range(len(models)):
+            preds[t_idx, m_idx] = np.loadtxt(names[t_idx + m_idx])
+    print(file_names)
+    t = find_best_threshold(labels=labels, probabilities=preds)
+    return t
+
+
+def get_files(exclude='resnet18'):
+    file_names = glob.glob('probs/*.txt')
+    file_names = [name for name in file_names if exclude not in name]
+    return file_names
+
+
+def predict_test(t):
     preds = np.zeros((61191, 17))
     for index, model in enumerate(models):
         name = str(model).split()[1]
@@ -191,4 +198,19 @@ if __name__ == '__main__':
         preds = preds + pred
 
     preds = preds/len(models)
-    pred_csv(predictions=preds, threshold=threshold, name='ensembles')
+    pred_csv(predictions=preds, threshold=t, name='ensembles')
+
+
+if __name__ == '__main__':
+    valid_dataloader = get_validation_loader()
+    test_dataloader = get_test_dataloader()
+
+    # save results to files
+    # probabilities = probs(valid_dataloader)
+
+    # get threshold
+    file_names = get_files()
+    t = do_thresholding(file_names, valid_dataloader.dataset.labels)
+
+    # testing
+    predict_test(t)
