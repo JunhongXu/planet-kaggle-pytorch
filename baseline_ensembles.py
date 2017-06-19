@@ -6,9 +6,10 @@ from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from data.kgdataset import KgForestDataset, toTensor
 from torchvision.transforms import Normalize, Compose, Lambda
+import glob
 from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet
 from planet_models.densenet_planet import densenet161, densenet121, densenet169
-from util import predict
+from util import predict, f2_score
 
 
 def default(imgs):
@@ -104,7 +105,36 @@ def probs(dataloader):
             probabilities[t_idx, m_idx] = m_predictions
     return probabilities
 
-# average the results from [verticalFlip, horizontalFlip, transpose]
+
+def find_best_threshold(labels, probabilities):
+    threshold = np.zeros(17)
+
+    # iterate over transformations
+    for t_idx in range(len(transforms)):
+        # iterate over class labels
+        t = np.ones(17) * 0.15
+        selected_preds = probabilities[t_idx]
+        selected_preds = np.mean(selected_preds, axis=0)
+        best_thresh = 0.0
+        best_score = 0.0
+        for i in range(17):
+            for r in range(500):
+                r /= 500
+                t[i] = r
+                preds = (selected_preds > t).astype(int)
+                score = f2_score(labels, preds)
+                if score > best_score:
+                    best_thresh = r
+                    best_score = score
+            t[i] = best_thresh
+            print('Transform index {}, score {}, threshold {}, label {}'.format(t_idx, best_score, best_thresh, i))
+        print('Transform index {}, threshold {}, score {}'.format(t_idx, t, best_score))
+        threshold = threshold + t
+    threshold = threshold / len(transforms)
+    return threshold
+
+
+
 
 # optimize the results
 
@@ -122,4 +152,13 @@ if __name__ == '__main__':
         width=256
     )
     valid_dataloader = DataLoader(validation, batch_size=256, shuffle=False)
-    print(probs(valid_dataloader))
+    # print(probs(valid_dataloader))
+    file_names = glob.glob('probs/*.txt')
+    preds = np.empty((len(transforms), len(models), 3000, 17))
+    for t_idx in range(len(transforms)):
+        for m_idx in range(len(models)):
+            preds[t_idx, m_idx] = np.loadtxt(file_names[t_idx + m_idx])
+    print(file_names)
+    t = find_best_threshold(labels=validation.labels, probabilities=preds)
+    print(list(t))
+    # print(np.loadtxt('probs/default_densenet121.txt').shape)
