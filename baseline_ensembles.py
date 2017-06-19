@@ -210,8 +210,8 @@ if __name__ == '__main__':
     # probabilities = probs(valid_dataloader)
 
     # get threshold
-    file_names = get_files()
-    t = do_thresholding(file_names, valid_dataloader.dataset.labels)
+    # file_names = get_files()
+    # t = do_thresholding(file_names, valid_dataloader.dataset.labels)
 
     # testing
-    predict_test(t)
+    predict_test(threshold)
