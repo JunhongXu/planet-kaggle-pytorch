@@ -52,7 +52,7 @@ def verticalFlip(imgs):
 mean = [0.31151703, 0.34061992, 0.29885209]
 std = [0.16730586, 0.14391145, 0.13747531]
 transforms = [default, rotate90, rotate180, rotate270, verticalFlip, horizontalFlip]
-models = [resnet18_planet, resnet34_planet, resnet50_planet, densenet121, densenet161, densenet169]
+models = [resnet34_planet, resnet50_planet, densenet121, densenet161, densenet169]
 
 
 
@@ -154,6 +154,7 @@ if __name__ == '__main__':
     valid_dataloader = DataLoader(validation, batch_size=256, shuffle=False)
     # print(probs(valid_dataloader))
     file_names = glob.glob('probs/*.txt')
+    file_names = [name for name in file_names if 'resnet18' not in name]
     preds = np.empty((len(transforms), len(models), 3000, 17))
     for t_idx in range(len(transforms)):
         for m_idx in range(len(models)):
