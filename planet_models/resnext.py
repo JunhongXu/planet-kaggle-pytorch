@@ -7,6 +7,7 @@ from torch.nn import *
 from torch.autograd import Variable
 from torch.nn.init import kaiming_normal
 
+
 class Bottleneck(Module):
     expansion = 4
     """Type C in the paper"""
