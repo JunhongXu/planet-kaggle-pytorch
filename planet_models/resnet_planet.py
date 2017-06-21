@@ -47,7 +47,7 @@ def resnet50_planet(pretrained=False):
 
 
 def resnet152_planet(pretrained=False):
-    model = resnet50(False, num_classes=17)
+    model = resnet152(False, num_classes=17)
     if pretrained:
         # load model dictionary
         model_dict = model.state_dict()

@@ -7,7 +7,7 @@ from torch.autograd import Variable
 from data.kgdataset import KgForestDataset, toTensor
 from torchvision.transforms import Normalize, Compose, Lambda
 import glob
-from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet
+from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet, resnet152_planet
 from planet_models.densenet_planet import densenet161, densenet121, densenet169
 from util import predict, f2_score, pred_csv
 
@@ -183,7 +183,7 @@ def do_thresholding(names, labels):
 
 
 def get_files(exclude='resnet18'):
-    file_names = glob.glob('probs/*.txt')
+    file_names = glob.glob('probs/*.txt')   
     file_names = [name for name in file_names if exclude not in name]
     return file_names
 
