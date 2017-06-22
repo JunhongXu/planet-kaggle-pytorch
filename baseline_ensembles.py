@@ -164,10 +164,15 @@ def do_thresholding(names, labels):
     return t
 
 
-def get_files(exclude='resnet18'):
-    file_names = glob.glob('probs/*.txt')   
-    file_names = [name for name in file_names if exclude not in name]
-    return file_names
+def get_files(excludes=['resnet18']):
+    file_names = glob.glob('probs/*.txt')
+    names = []
+    for filename in file_names:
+        for exclude in excludes:
+            if filename not in exclude:
+                # file_names = [name for name in file_names if exclude not in name]
+                names.append(filename)
+    return names
 
 
 def predict_test(t):
@@ -192,8 +197,9 @@ if __name__ == '__main__':
     probabilities = probs(valid_dataloader)
 
     # get threshold
-    # file_names = get_files()
-    # t = do_thresholding(file_names, valid_dataloader.dataset.labels)
+    file_names = get_files(['resnet18', 'resnet50', 'resnet34', 'densenet121', 'densenet169'])
+    t = do_thresholding(file_names, valid_dataloader.dataset.labels)
+    print(t)
 
     # testing
-    predict_test(threshold)
+    # predict_test(threshold)
