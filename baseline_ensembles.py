@@ -59,28 +59,10 @@ threshold = [0.23166666666666666, 0.19599999999999998, 0.18533333333333335,
              0.25866666666666666, 0.057999999999999996]
 
 transforms = [default, rotate90, rotate180, rotate270, verticalFlip, horizontalFlip]
-models = [resnet34_planet, resnet50_planet, densenet121, densenet161, densenet169]
+models = [# resnet18_planet, resnet34_planet, resnet50_planet, densenet121, densenet161, densenet169
+            resnet152_planet
+        ]
 
-
-
-
-# if __name__ == '__main__':
-#     img = cv2.imread('images.jpeg')
-#     img = cv2.resize(img, (256, 256))
-#     img = np.expand_dims(img, axis=0)
-#     rotation90 = rotate90(img.copy())[0]
-#     rotation180 = rotate180(img.copy())[0]
-#     rotation270 = rotate270(img.copy())[0]
-#     vertical = verticalFlip(img.copy())[0]
-#     horizontal = horizontalFlip(img.copy())[0]
-#     cv2.imshow('original', img[0])
-#     cv2.imshow('90', rotation90)
-#     cv2.imshow('180', rotation180)
-#     cv2.imshow('270', rotation270)
-#     cv2.imshow('vertical', vertical)
-#     cv2.imshow('horizontal', horizontal)
-#
-#     cv2.waitKey()
 
 # save probabilities to files for debug
 def probs(dataloader):
@@ -207,7 +189,7 @@ if __name__ == '__main__':
     test_dataloader = get_test_dataloader()
 
     # save results to files
-    # probabilities = probs(valid_dataloader)
+    probabilities = probs(valid_dataloader)
 
     # get threshold
     # file_names = get_files()
