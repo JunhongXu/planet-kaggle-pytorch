@@ -18,6 +18,14 @@ converge, with a good learning rate setup, it is able to outperform Adam. (why??
 (Xception-like network?) and train it on a smaller sized image. 
 (128 * 128?)
 
-2. Train ResNet-152 and do ensemble with DenseNets
+2. Train ResNet-152 and do ensemble with DenseNets (Done)
 
 3. Use the IR channel.
+--------------------------------------
+## Update June 23
+
+1. Trained ResNet152
+
+2. Used the ensemble of ResNet152, DenseNet161, and DenseNet169 to do predictions on test set. (LB: 0.93068, Rank: 23)
+
+3. Used different transformations on test dataset and average the ensemble results. (LB: 0.93112, Rank: 17)
