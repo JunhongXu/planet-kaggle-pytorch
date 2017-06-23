@@ -196,7 +196,7 @@ def get_files(excludes=['resnet18']):
 
 def predict_test(t):
     preds = np.zeros((61191, 17))
-    imgs = test_dataloader.dataset.images.copy()
+    # imgs = test_dataloader.dataset.images.copy()
     # iterate over models
     for index, model in enumerate(models):
         name = str(model).split()[1]
@@ -205,8 +205,8 @@ def predict_test(t):
         net.eval()
         # iterate over transformations
         for transformation in transforms:
-            imgs = transformation(imgs)
-            test_dataloader.dataset.images = imgs
+            # imgs = transformation(imgs)
+            test_dataloader.dataset.images = transformation(test_dataloader.dataset.images)
             pred = predict(dataloader=test_dataloader, net=net)
             preds = preds + pred
 
