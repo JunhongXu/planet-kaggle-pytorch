@@ -13,7 +13,6 @@ from util import predict, f2_score, pred_csv
 from data import kgdataset
 
 
-kgdataset.KAGGLE_DATA_DIR = '../../../kaggle'
 
 def default(imgs):
     return imgs
