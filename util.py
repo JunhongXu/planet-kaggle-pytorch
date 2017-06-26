@@ -34,7 +34,7 @@ def predict(net, dataloader):
     return probs
 
 
-def pred_csv(predictions, threshold, name):
+def pred_csv(predictions, name, threshold=None):
     """
     predictions: numpy array of predicted probabilities
     """
@@ -42,7 +42,8 @@ def pred_csv(predictions, threshold, name):
     submission = pd.read_csv(csv_name)
     print(submission)
     for i, pred in enumerate(predictions):
-        labels = (pred > threshold).astype(int)
+        if threshold is not None:
+            labels = (pred > threshold).astype(int)
         labels = np.where(labels == 1)[0]
         labels = ' '.join(idx_name()[index] for index in labels)
         submission['tags'][i] = labels
