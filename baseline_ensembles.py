@@ -10,7 +10,10 @@ import glob
 from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet, resnet152_planet
 from planet_models.densenet_planet import densenet161, densenet121, densenet169
 from util import predict, f2_score, pred_csv
+from data import kgdataset
 
+
+kgdataset.KAGGLE_DATA_DIR = '../../../kaggle'
 
 def default(imgs):
     return imgs
@@ -194,7 +197,7 @@ def get_test_dataloader():
     return test_dataloader
 
 
-def do_thresholding(names, labels):
+def do_thresholding(names, models, labels):
     preds = np.empty((len(transforms), len(models), 3000, 17))
     print('filenames', names)
     for t_idx in range(len(transforms)):
@@ -269,12 +272,12 @@ if __name__ == '__main__':
     # probabilities = probs(valid_dataloader)
 
     # get threshold
-    model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet151', 'densenet121', 'densenet161', 'densenet169']
+    model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet152', 'densenet121', 'densenet161', 'densenet169']
     for m in models:
-        name = str(m).split()[1]
+        name = str(m).split()[1].strip('_planet')
         file_names = get_files([n for n in model_names if n != name])
         print('Model {}'.format(name))
-        t = do_thresholding(file_names, valid_dataloader.dataset.labels)
+        t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
         print(t)
 
     # average testing
