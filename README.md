@@ -16,11 +16,14 @@ converge, with a good learning rate setup, it is able to outperform Adam. (why??
 
 1. Finish feature pyramid network with group convolution 
 (Xception-like network?) and train it on a smaller sized image. 
-(128 * 128?)
+(128 * 128?) (June 28th)
 
-2. Train ResNet-152 and do ensemble with DenseNets (Done)
+2. Train ResNet-152 and do ensemble with DenseNets (Done) (June 23rd)
 
-3. Use the IR channel.
+3. Use majority voting ensemble method with all ResNet models and DenseNet models (June 26th).
+
+4. Use the IR channel. (June 27th)
+
 --------------------------------------
 ## Update June 23
 
