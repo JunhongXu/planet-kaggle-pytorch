@@ -16,8 +16,22 @@ converge, with a good learning rate setup, it is able to outperform Adam. (why??
 
 1. Finish feature pyramid network with group convolution 
 (Xception-like network?) and train it on a smaller sized image. 
-(128 * 128?)
+(128 * 128?) (June 28th)
 
-2. Train ResNet-152 and do ensemble with DenseNets
+2. Train ResNet-152 and do ensemble with DenseNets (Done) (June 23rd)
 
-3. Use the IR channel.
+3. Use majority voting ensemble method with all ResNet models and DenseNet models (June 26th).
+
+4. Use the IR channel. (June 27th)
+
+--------------------------------------
+## Update June 23
+
+1. Trained ResNet152
+
+2. Used the ensemble of ResNet152, DenseNet161, and DenseNet169 to do predictions on test set. (LB: 0.93068, Rank: 23)
+
+3. Used different transformations on test dataset and average the ensemble results. (LB: 0.93112, Rank: it is 18th now :(  )
+
+---------------------------------------
+Have been doing some other stuff during the weekend, no progress yet. If anyone wants to teamup please email me at jxu7@bsu.edu. In addition, if anyone has new ideas using my code, please discuss in the Kaggle discussion board so that every competitor is able to learn some new stuff! Thanks!
