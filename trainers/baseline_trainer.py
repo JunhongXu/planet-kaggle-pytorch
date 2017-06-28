@@ -120,7 +120,7 @@ def train_baselines():
         name = str(model).split()[1]
         print('*****Start Training {} with batch size {}******'.format(name, batch))
         print(' epoch   iter   rate  |  smooth_loss   |  train_loss  (acc)  |  valid_loss  (acc)  | total_train_loss\n')
-        logger = Logger('../log/{}'.format(name), name)
+        logger = Logger('../log/full_data_{}'.format(name), name)
 
         # load pre-trained model on train-37479
         net = model(pretrained=True)
@@ -196,10 +196,7 @@ def train_baselines():
                 # save if the current loss is better
                 if test_loss < best_test_loss:
                     print('save {} {}'.format(test_loss, best_test_loss))
-                    torch.save(net.state_dict(), '../models/{}.pth'.format(name))
-                    net.load_state_dict(torch.load('../models/{}.pth'.format(name)))
-                    print(evaluate(net, val_data))
-
+                    torch.save(net.state_dict(), '../models/full_data_{}.pth'.format(name))
                     best_test_loss = test_loss
 
             logger.add_record('train_loss', total_epoch_loss)
