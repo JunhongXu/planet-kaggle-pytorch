@@ -40,10 +40,11 @@ def pred_csv(predictions, name, threshold=None):
     """
     csv_name = os.path.join(KAGGLE_DATA_DIR, 'sample_submission.csv')
     submission = pd.read_csv(csv_name)
-    print(submission)
     for i, pred in enumerate(predictions):
         if threshold is not None:
             labels = (pred > threshold).astype(int)
+        else:
+            labels = pred
         labels = np.where(labels == 1)[0]
         labels = ' '.join(idx_name()[index] for index in labels)
         submission['tags'][i] = labels

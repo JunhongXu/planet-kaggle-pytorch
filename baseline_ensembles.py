@@ -232,12 +232,13 @@ def predict_test_majority():
     Majority voting method.
     """
     labels = np.empty((len(models), 61191, 17))
-    for m_idx, model in models:
+    for m_idx, model in enumerate(models):
         name = str(model).split()[1]
+        print('predicting model {}'.format(name))
         net = nn.DataParallel(model().cuda())
-        net.load_state_dict(torch.load('models/{}.pth').format(name))
+        net.load_state_dict(torch.load('models/{}.pth'.format(name)))
         net.eval()
-        preds = np.zeros(61191, 17)
+        preds = np.zeros((61191, 17))
         for t in transforms:
             test_dataloader.dataset.images = t(test_dataloader.dataset.images)
             pred = predict(net, dataloader=test_dataloader)
@@ -250,7 +251,7 @@ def predict_test_majority():
 
     # majority voting
     labels = labels.sum(axis=0)
-    labels = (labels >= len(models)//2).astype(int)
+    labels = (labels >= (len(models)//2)).astype(int)
     pred_csv(predictions=labels, name='majority_voting_ensembles')
 
 

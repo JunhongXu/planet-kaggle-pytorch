@@ -34,4 +34,11 @@ converge, with a good learning rate setup, it is able to outperform Adam. (why??
 3. Used different transformations on test dataset and average the ensemble results. (LB: 0.93112, Rank: it is 18th now :(  )
 
 ---------------------------------------
+
+## Update June 28
+
+Majority voting gives a small improvement: 0.93112 -> 0.93114. Now rank at 21st.
+
+----------------------------------------
+
 Have been doing some other stuff during the weekend, no progress yet. If anyone wants to teamup please email me at jxu7@bsu.edu. In addition, if anyone has new ideas using my code, please discuss in the Kaggle discussion board so that every competitor is able to learn some new stuff! Thanks!
