@@ -104,16 +104,16 @@ def get_learning_rate(optimizer):
     return lr
 
 
-def lr_schedule(epoch, optimizer, pretrained=False):
+def lr_schedule(epoch, optimizer, base_lr=0.1, pretrained=False):
     if pretrained:
         if 0 <= epoch < 10:
-            lr = 1e-2
+            lr = base_lr
         elif 10 <= epoch < 25:
-            lr = 5e-3
+            lr = base_lr * 0.5
         elif 25 <= epoch < 40:
-            lr = 1e-3
+            lr = base_lr * 0.1
         else:
-            lr = 1e-4
+            lr = base_lr * 0.01
     else:
         if 0 <= epoch < 10:
             lr = 1e-1
