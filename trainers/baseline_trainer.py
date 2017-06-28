@@ -101,9 +101,9 @@ def get_optimizer(net, lr, resnet=False, pretrained=False):
                 {'params': net.features.parameters(), 'lr': lr},
                 {'params': net.classifier.parameters(), 'lr': lr * 10}
             ]
-        optimizer = optim.SGD(params=parameters, weight_decay=5e-5, momentum=.9)
+        optimizer = optim.SGD(params=parameters, weight_decay=5e-4, momentum=.9)
     else:
-        optimizer = optim.SGD(params=net.parameters(), lr=lr, weight_decay=5e-5, momentum=.9)
+        optimizer = optim.SGD(params=net.parameters(), lr=lr, weight_decay=5e-4, momentum=.9)
     return optimizer
 
 
