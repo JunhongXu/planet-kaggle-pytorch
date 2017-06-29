@@ -59,7 +59,7 @@ def optimize_threshold(models, datasets, resolution=1000):
 
 if __name__ == '__main__':
     model1 = nn.DataParallel(densenet161(pretrained=True).cuda())
-    model1.load_state_dict(torch.load('../models/densenet161.pth'))
+    model1.load_state_dict(torch.load('../models/full_data_resnet18_planet.pth'))
     model1.cuda().eval()
     validation = KgForestDataset(
         split='validation-3000',
