@@ -71,9 +71,9 @@ def get_dataloader(batch_size):
         split='valid-8000',
         transform=Compose(
             [
-                # Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
-                # Lambda(lambda x: randomFlip(x)),
-                # Lambda(lambda x: randomTranspose(x)),
+                Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
+                Lambda(lambda x: randomFlip(x)),
+                Lambda(lambda x: randomTranspose(x)),
                 Lambda(lambda x: toTensor(x)),
                 Normalize(mean=mean, std=std)
             ]
@@ -124,10 +124,10 @@ def train_baselines():
 
         # load pre-trained model on train-37479
         net = model(pretrained=True)
-        load_net(net, name)
-        optimizer = get_optimizer(net, lr=.001, pretrained=True, resnet=True if 'resnet' in name else False)
         net = nn.DataParallel(net.cuda())
-
+        load_net(net, name)
+        # optimizer = get_optimizer(net, lr=.001, pretrained=True, resnet=True if 'resnet' in name else False)
+        optimizer = optim.SGD(lr=0.05, momentum=0.9, params=net.parameters(), weight_decay=5e-4)
         train_data.batch_size = batch
         val_data.batch_size = batch
 
@@ -146,7 +146,7 @@ def train_baselines():
             # train loss averaged every epoch
             total_epoch_loss = 0.0
 
-            lr_schedule(epoch, optimizer, pretrained=True)
+            lr_schedule(epoch, optimizer, base_lr=0.05, pretrained=True)
 
             rate = get_learning_rate(optimizer)[0]  # check
 
