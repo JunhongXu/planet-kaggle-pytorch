@@ -41,4 +41,10 @@ Majority voting gives a small improvement: 0.93112 -> 0.93114. Now rank at 21st.
 
 ----------------------------------------
 
+
+## Update July 2
+
+Majority voting with fine-tuning the full dataset on pre-trained models gives me rank at 19th with f2 score 0.93170.
+---------------------------
+
 Have been doing some other stuff during the weekend, no progress yet. If anyone wants to teamup please email me at jxu7@bsu.edu. In addition, if anyone has new ideas using my code, please discuss in the Kaggle discussion board so that every competitor is able to learn some new stuff! Thanks!
