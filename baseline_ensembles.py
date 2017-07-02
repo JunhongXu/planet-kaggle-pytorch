@@ -109,6 +109,7 @@ thresholds = [
 transforms = [default, rotate90, rotate180, rotate270, verticalFlip, horizontalFlip]
 
 models = [
+            resnet18_planet,
             resnet34_planet,
             resnet50_planet,
             resnet152_planet,
@@ -136,8 +137,9 @@ def probs(dataloader):
         for m_idx, model in enumerate(models):
             name = str(model).split()[1]
             net = model().cuda()
+            name = 'full_data_{}.pth'.format(name)
             net = nn.DataParallel(net)
-            net.load_state_dict(torch.load('models/{}.pth'.format(name)))
+            net.load_state_dict(torch.load('models/{}'.format(name)))
             net.eval()
             # predict
             m_predictions = predict(net, dataloader)
@@ -178,7 +180,7 @@ def find_best_threshold(labels, probabilities):
 
 def get_validation_loader():
     validation = KgForestDataset(
-        split='validation-3000',
+        split='train-40479',
         transform=Compose(
             [
                 Lambda(lambda x: toTensor(x)),
@@ -209,7 +211,7 @@ def get_test_dataloader():
 
 
 def do_thresholding(names, models, labels):
-    preds = np.empty((len(transforms), len(models), 3000, 17))
+    preds = np.empty((len(transforms), len(models), 40479, 17))
     print('filenames', names)
     for t_idx in range(len(transforms)):
         for m_idx in range(len(models)):
@@ -220,6 +222,7 @@ def do_thresholding(names, models, labels):
 
 def get_files(excludes=None):
     file_names = glob.glob('probs/*.txt')
+    file_names = [f for f in file_names if 'full_data' in f]
     names = []
     for filename in file_names:
         if not any([exclude in filename for exclude in excludes]):
@@ -277,23 +280,23 @@ def predict_test_averaging(t):
 
 
 if __name__ == '__main__':
-    # valid_dataloader = get_validation_loader()
-    test_dataloader = get_test_dataloader()
+    valid_dataloader = get_validation_loader()
+    # test_dataloader = get_test_dataloader()
 
     # save results to files
     # probabilities = probs(valid_dataloader)
 
     # get threshold
-    # model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet152', 'densenet121', 'densenet161', 'densenet169']
-    # for m in models:
-    #     name = str(m).split()[1].strip('_planet')
-    #     file_names = get_files([n for n in model_names if n != name])
-    #     print('Model {}'.format(name))
-    #     t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
-    #     print(t)
+    model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet152', 'densenet121', 'densenet161', 'densenet169']
+    for m in models:
+        name = str(m).split()[1].strip('_planet')
+        file_names = get_files([n for n in model_names if n != name])
+        print('Model {}'.format(name))
+        t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
+        print(t)
 
     # average testing
     # predict_test_averaging(threshold)
 
     # majority voting
-    predict_test_majority()
+    # predict_test_majority()

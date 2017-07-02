@@ -19,17 +19,17 @@ A baseline trainer trains the models as followed:
 2. DenseNet: 169, 161, and 121 (from pre-trained on 37479)
 
 -------parameters---------
-    epochs: 80
+    epochs: 40
 
-    batch size: 128, 128, 64, 64, 64, 64, 50
+    batch size: 128, 128, 100, 64, 64, 64, 50
 
     use SGD+0.9momentum w/o nestrov
 
     weight decay: 5e-4
 
-    learning rate: 00-10 epoch: 0.01
-                   10-25 epoch: 0.005
-                   25-35 epoch: 0.001
+    learning rate: 00-10 epoch: 0.005
+                   10-25 epoch: 0.0025
+                   25-35 epoch: 0.0001
                    35-40 epoch: 0.0001
 
     train set: 40479
@@ -37,16 +37,18 @@ A baseline trainer trains the models as followed:
 
 
 models = [
-            resnet18_planet, resnet34_planet,
-            resnet50_planet, densenet121,
-            densenet169, densenet161,
+            # resnet18_planet, resnet34_planet,
+            # resnet50_planet,
+            densenet121,
+            densenet169,
+            densenet161,
             resnet152_planet
           ]
 batch_size = [
-                128, 128,
-                100, 64,
+                # 128, 128,
                 64, 64,
-                50
+                40, 40,
+                # 50
             ]
 
 
@@ -68,10 +70,10 @@ def get_dataloader(batch_size):
     train_data_loader = DataLoader(batch_size=batch_size, dataset=train_data, shuffle=True)
 
     validation = KgForestDataset(
-        split='valid-8000',
+        split='validation-3000',
         transform=Compose(
             [
-                Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
+                # Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
                 Lambda(lambda x: randomFlip(x)),
                 Lambda(lambda x: randomTranspose(x)),
                 Lambda(lambda x: toTensor(x)),
@@ -127,7 +129,7 @@ def train_baselines():
         net = nn.DataParallel(net.cuda())
         load_net(net, name)
         # optimizer = get_optimizer(net, lr=.001, pretrained=True, resnet=True if 'resnet' in name else False)
-        optimizer = optim.SGD(lr=0.05, momentum=0.9, params=net.parameters(), weight_decay=5e-4)
+        optimizer = optim.SGD(lr=.005, momentum=0.9, params=net.parameters(), weight_decay=5e-4)
         train_data.batch_size = batch
         val_data.batch_size = batch
 
@@ -146,7 +148,7 @@ def train_baselines():
             # train loss averaged every epoch
             total_epoch_loss = 0.0
 
-            lr_schedule(epoch, optimizer, base_lr=0.05, pretrained=True)
+            lr_schedule(epoch, optimizer, base_lr=0.001, pretrained=True)
 
             rate = get_learning_rate(optimizer)[0]  # check
 

@@ -1,7 +1,6 @@
 from planet_models.densenet_planet import *
 from planet_models.resnet_planet import *
 from torch.autograd import Variable
-from planet_models.simplenet_v2 import *
 from datasets import *
 import torch.nn.functional as F
 from util import f2_score
@@ -58,11 +57,11 @@ def optimize_threshold(models, datasets, resolution=1000):
 
 
 if __name__ == '__main__':
-    model1 = nn.DataParallel(densenet161(pretrained=True).cuda())
-    model1.load_state_dict(torch.load('../models/full_data_resnet18_planet.pth'))
+    model1 = nn.DataParallel(densenet121(pretrained=True).cuda())
+    model1.load_state_dict(torch.load('../models/full_data_densenet121.pth'))
     model1.cuda().eval()
     validation = KgForestDataset(
-        split='validation-3000',
+        split='valid-8000',
         transform=Compose(
             [
                 Lambda(lambda x: randomFlip(x)),
