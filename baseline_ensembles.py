@@ -272,10 +272,12 @@ def predict_test_majority():
         preds = np.zeros((61191, 17))
         for t in transforms:
             test_dataloader.dataset.images = t(test_dataloader.dataset.images)
+            print(t, name)
             pred = predict(net, dataloader=test_dataloader)
             preds = preds + pred
         # get predictions for the single model
         preds = preds/len(transforms)
+        np.savetxt('submission_probs/full_data_{}.txt'.format(name), preds)
         # get labels
         preds = (preds > thresholds[m_idx]).astype(int)
         labels[m_idx] = preds
@@ -283,7 +285,7 @@ def predict_test_majority():
     # majority voting
     labels = labels.sum(axis=0)
     labels = (labels >= (len(models)//2)).astype(int)
-    pred_csv(predictions=labels, name='majority_voting_ensembles')
+    pred_csv(predictions=labels, name='majority_voting_ensembles_full_data')
 
 
 def predict_test_averaging(t):
