@@ -135,9 +135,9 @@ class ResNet(nn.Module):
         self.avgpool = nn.AvgPool2d(7)                                      # 2048*1*1
 
         # top-down
-        self.td_1 = self._make_top_down_layer(2048, 1024)                   # 1024*8*8
-        self.td_2 = self._make_top_down_layer(1024, 512)                    # 512*16*16
-        self.td_3 = self._make_top_down_layer(512, 256)                     # 256*32*32
+        self.td_1 = self._make_top_down_layer(512*block.expansion, 256*block.expansion)                     # 1024*8*8
+        self.td_2 = self._make_top_down_layer(256*block.expansion, 128*block.expansion)                    # 512*16*16
+        self.td_3 = self._make_top_down_layer(128*block.expansion, 64*block.expansion)                     # 256*32*32
 
         # extra conv layers
         self.p1_conv = self._make_conv_bn(1024, 256, 3, padding=1, stride=1)
