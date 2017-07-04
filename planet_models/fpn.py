@@ -140,10 +140,10 @@ class ResNet(nn.Module):
         self.td_3 = self._make_top_down_layer(128*block.expansion, 64*block.expansion)                     # 256*32*32
 
         # extra conv layers
-        self.p1_conv = self._make_conv_bn(1024, 256, 3, padding=1, stride=1)
-        self.p2_conv = self._make_conv_bn(1024, 256, 3, padding=1, stride=1)
-        self.p3_conv = self._make_conv_bn(512, 256, 3, padding=1, stride=1)
-        self.p4_conv = self._make_conv_bn(256, 256, 3, padding=1, stride=1)
+        self.p1_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1)
+        self.p2_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1)
+        self.p3_conv = self._make_conv_bn(128*block.expansion, 256, 3, padding=1, stride=1)
+        self.p4_conv = self._make_conv_bn(64*block.expansion, 256, 3, padding=1, stride=1)
 
         # classification layer
         self.fc = nn.Linear(256 * 4, out_features=num_classes, bias=True)
