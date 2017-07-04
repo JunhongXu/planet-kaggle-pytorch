@@ -154,7 +154,7 @@ def train_baselines():
         train_data.batch_size = batch
         val_data.batch_size = batch
 
-        num_epoches = 40
+        num_epoches = 60
         print_every_iter = 20
         epoch_test = 1
 
