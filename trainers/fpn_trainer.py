@@ -143,7 +143,7 @@ def train_baselines():
         name = str(model).split()[1]
         print('*****Start Training {} with batch size {}******'.format(name, batch))
         print(' epoch   iter   rate  |  smooth_loss   |  train_loss  (acc)  |  valid_loss  (acc)  | total_train_loss\n')
-        logger = Logger('../log/full_data_{}'.format(name), name)
+        logger = Logger('../log/{}'.format(name), name)
 
         net = model(pretrained=True)
         net = nn.DataParallel(net.cuda())
