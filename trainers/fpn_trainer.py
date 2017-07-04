@@ -90,10 +90,10 @@ def get_dataloader(batch_size):
 
 def get_optimizer(net, lr):
     parameters = [
-                {'params': net.layer1.parameters(), 'lr': lr},
-                {'params': net.layer2.parameters(), 'lr': lr},
-                {'params': net.layer3.parameters(), 'lr': lr},
-                {'params': net.layer4.parameters(), 'lr': lr}
+                {'params': net.module.layer1.parameters(), 'lr': lr},
+                {'params': net.module.layer2.parameters(), 'lr': lr},
+                {'params': net.module.layer3.parameters(), 'lr': lr},
+                {'params': net.module.layer4.parameters(), 'lr': lr}
             ]
     optimizer = optim.SGD(params=parameters, lr=lr*10, weight_decay=5e-4, momentum=.9)
     return optimizer
@@ -109,6 +109,7 @@ def lr_schedule(epoch, optimizer, net):
     else:
         lr = 0.0001
 
+    net = net.module
     param_groups = [
         {'params': net.layer1.parameters(), 'lr': lr},
         {'params': net.layer2.parameters(), 'lr': lr},
