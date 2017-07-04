@@ -100,7 +100,8 @@ def evaluate(net, test_loader):
 def get_learning_rate(optimizer):
     lr=[]
     for param_group in optimizer.param_groups:
-       lr +=[param_group['lr']]
+        if 'lr' in param_group:
+            lr +=[param_group['lr']]
     return lr
 
 

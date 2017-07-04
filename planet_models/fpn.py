@@ -207,7 +207,7 @@ class ResNet(nn.Module):
         # print(layer_3.size())
 
         layer_4 = self.layer4(layer_3)
-        # print(layer_4.size())
+        print(layer_4.size())
 
         p_1 = self.td_1(layer_4)
         # print(p_1.size())
