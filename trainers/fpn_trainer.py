@@ -111,18 +111,18 @@ def lr_schedule(epoch, optimizer, net):
 
     net = net.module
     param_groups = [
-        {'params': net.layer1.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.layer2.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.layer3.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.layer4.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.td_1.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.td_2.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.td_3.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.p1_conv.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.p2_conv.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.p3_conv.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.p4_conv.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
-        {'params': net.fc.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0},
+        {'params': net.layer1.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.layer2.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.layer3.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.layer4.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.td_1.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.td_2.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.td_3.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.p1_conv.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.p2_conv.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.p3_conv.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.p4_conv.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
+        {'params': net.fc.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
     ]
 
     # for para_group in optimizer.param_groups:
