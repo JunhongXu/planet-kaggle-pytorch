@@ -140,13 +140,13 @@ class ResNet(nn.Module):
         self.td_3 = self._make_top_down_layer(128*block.expansion, 64*block.expansion)                     # 256*32*32
 
         # extra conv layers
-        self.p1_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1)                # 256*8*8
-        self.p2_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1)                # 256*16*16
-        self.p3_conv = self._make_conv_bn(128*block.expansion, 256, 3, padding=1, stride=1)                # 256*32*32
-        self.p4_conv = self._make_conv_bn(64*block.expansion, 256, 3, padding=1, stride=1)                 # 256*64*64
+        self.p1_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1, use_relu=True)                # 256*8*8
+        self.p2_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1, use_relu=True)                # 256*16*16
+        self.p3_conv = self._make_conv_bn(128*block.expansion, 256, 3, padding=1, stride=1, use_relu=True)                # 256*32*32
+        self.p4_conv = self._make_conv_bn(64*block.expansion, 256, 3, padding=1, stride=1, use_relu=True)                 # 256*64*64
 
         # classification layer
-        self.fc = nn.Linear(256 * 4, out_features=num_classes, bias=True)
+        self.fc = nn.Linear(256, out_features=num_classes, bias=True)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -207,7 +207,7 @@ class ResNet(nn.Module):
         # print(layer_3.size())
 
         layer_4 = self.layer4(layer_3)
-        print(layer_4.size())
+        # print(layer_4.size())
 
         p_1 = self.td_1(layer_4)
         # print(p_1.size())
