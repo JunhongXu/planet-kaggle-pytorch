@@ -140,13 +140,16 @@ class ResNet(nn.Module):
         self.td_3 = self._make_top_down_layer(128*block.expansion, 64*block.expansion)                     # 256*32*32
 
         # extra conv layers
-        self.p1_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1, use_relu=True)                # 256*8*8
-        self.p2_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1, use_relu=True)                # 256*16*16
-        self.p3_conv = self._make_conv_bn(128*block.expansion, 256, 3, padding=1, stride=1, use_relu=True)                # 256*32*32
-        self.p4_conv = self._make_conv_bn(64*block.expansion, 256, 3, padding=1, stride=1, use_relu=True)                 # 256*64*64
+        self.p1_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=0, stride=2, use_relu=True)                # 256*4*4
+        self.p2_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=0, stride=2, use_relu=True)                # 256*8*8
+        self.p3_conv = self._make_conv_bn(128*block.expansion, 256, 3, padding=0, stride=2, use_relu=True)                # 256*16*16
+        self.p4_conv = self._make_conv_bn(64*block.expansion, 256, 3, padding=0, stride=2, use_relu=True)                 # 256*32*32
 
         # classification layer
-        self.fc = nn.Linear(256, out_features=num_classes, bias=True)
+        self.cls1 = nn.Linear(256, out_features=num_classes, bias=True)
+        self.cls2 = nn.Linear(2304, out_features=num_classes, bias=True)
+        self.cls3 = nn.Linear(12544, out_features=num_classes, bias=True)
+        self.cls4 = nn.Linear(57600, out_features=num_classes, bias=True)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -191,6 +194,7 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
+        N = x.size(0)
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -223,26 +227,28 @@ class ResNet(nn.Module):
 
         p_4 = self.td_3(upsample_p3) + layer_1
         # print(p_4.size())
-
         p_1 = self.p1_conv(p_1)
         p_2 = self.p2_conv(p_2)
+
         p_3 = self.p3_conv(p_3)
         p_4 = self.p4_conv(p_4)
 
         # pooling
-        cls_1 = F.avg_pool2d(p_1, kernel_size=8)
-        cls_2 = F.avg_pool2d(p_2, kernel_size=16)
-        cls_3 = F.avg_pool2d(p_3, kernel_size=32)
-        cls_4 = F.avg_pool2d(p_4, kernel_size=64)
-        # print(cls_1.size(), cls_2.size(), cls_3.size(), cls_4.size())
+        cls_1 = self.cls1(F.avg_pool2d(p_1, kernel_size=3).view(N, -1))
+        cls_2 = self.cls2(F.avg_pool2d(p_2, kernel_size=3, stride=2).view(N, -1))
+        cls_3 = self.cls3(F.avg_pool2d(p_3, kernel_size=3, stride=2).view(N, -1))
+        cls_4 = self.cls4(F.avg_pool2d(p_4, kernel_size=3, stride=2).view(N, -1))
         # concatenate
         # cls = torch.cat([cls_1, cls_2, cls_3, cls_4], 1)
         cls = cls_1 + cls_2 + cls_3 + cls_4
         # print(cls.size())
         cls = cls.view(cls.size(0), -1)
-        x = self.fc(cls)
-        return x
+        # x = self.fc(cls)
+        return cls
 
 
 if __name__ == '__main__':
-    fpn_34()
+    from torch.autograd import Variable
+    net =fpn_34()
+    x = Variable(torch.randn(1, 3, 256, 256))
+    net(x)
