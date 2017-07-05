@@ -140,10 +140,10 @@ class ResNet(nn.Module):
         self.td_3 = self._make_top_down_layer(128*block.expansion, 64*block.expansion)                     # 256*32*32
 
         # extra conv layers
-        self.p1_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1)
-        self.p2_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1)
-        self.p3_conv = self._make_conv_bn(128*block.expansion, 256, 3, padding=1, stride=1)
-        self.p4_conv = self._make_conv_bn(64*block.expansion, 256, 3, padding=1, stride=1)
+        self.p1_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1)                # 256*8*8
+        self.p2_conv = self._make_conv_bn(256*block.expansion, 256, 3, padding=1, stride=1)                # 256*16*16
+        self.p3_conv = self._make_conv_bn(128*block.expansion, 256, 3, padding=1, stride=1)                # 256*32*32
+        self.p4_conv = self._make_conv_bn(64*block.expansion, 256, 3, padding=1, stride=1)                 # 256*64*64
 
         # classification layer
         self.fc = nn.Linear(256 * 4, out_features=num_classes, bias=True)
@@ -236,7 +236,8 @@ class ResNet(nn.Module):
         cls_4 = F.avg_pool2d(p_4, kernel_size=64)
         # print(cls_1.size(), cls_2.size(), cls_3.size(), cls_4.size())
         # concatenate
-        cls = torch.cat([cls_1, cls_2, cls_3, cls_4], 1)
+        # cls = torch.cat([cls_1, cls_2, cls_3, cls_4], 1)
+        cls = cls_1 + cls_2 + cls_3 + cls_4
         # print(cls.size())
         cls = cls.view(cls.size(0), -1)
         x = self.fc(cls)
