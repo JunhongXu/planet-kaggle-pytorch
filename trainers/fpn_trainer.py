@@ -41,14 +41,14 @@ FPN-34, FPN-50, FPN-152
 
 
 models = [
-            fpn_34,
+            # fpn_34,
             fpn_50,
             fpn_152
           ]
 batch_size = [
-                128,
-                100,
-                50
+                # 128,
+                64,
+                40
             ]
 
 
@@ -109,25 +109,10 @@ def lr_schedule(epoch, optimizer, net):
     else:
         lr = 0.0001
 
-    net = net.module
-    param_groups = [
-        {'params': net.layer1.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.layer2.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.layer3.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.layer4.parameters(), 'lr': lr, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.td_1.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.td_2.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.td_3.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.p1_conv.parameters(), 'lr': lr*10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.p2_conv.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.p3_conv.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.p4_conv.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-        {'params': net.fc.parameters(), 'lr': lr * 10, 'weight_decay': 5e-4, 'momentum': .9, 'dampening': 0, 'nesterov': False},
-    ]
 
-    # for para_group in optimizer.param_groups:
-    #     para_group['lr'] = lr
-    optimizer.param_groups = param_groups
+    for para_group in optimizer.param_groups:
+        para_group['lr'] = lr
+    #   `optimizer.param_groups = param_groups
 
 
 def load_net(net, name):
@@ -154,7 +139,7 @@ def train_baselines():
         train_data.batch_size = batch
         val_data.batch_size = batch
 
-        num_epoches = 60
+        num_epoches = 100
         print_every_iter = 20
         epoch_test = 1
 
