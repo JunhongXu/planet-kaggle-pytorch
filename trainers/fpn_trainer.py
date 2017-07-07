@@ -42,12 +42,12 @@ FPN-34, FPN-50, FPN-152
 
 models = [
             # fpn_34,
-            fpn_50,
+            # fpn_50,
             fpn_152
           ]
 batch_size = [
                 # 128,
-                64,
+                # 64,
                 40
             ]
 

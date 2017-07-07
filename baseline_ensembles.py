@@ -213,7 +213,7 @@ def find_best_threshold(labels, probabilities):
 
 def get_validation_loader():
     validation = KgForestDataset(
-        split='train-40479',
+        split='valid-3000',
         transform=Compose(
             [
                 Lambda(lambda x: toTensor(x)),
@@ -244,7 +244,7 @@ def get_test_dataloader():
 
 
 def do_thresholding(names, models, labels):
-    preds = np.empty((len(transforms), len(models), 40479, 17))
+    preds = np.empty((len(transforms), len(models), 3000, 17))
     print('filenames', names)
     for t_idx in range(len(transforms)):
         for m_idx in range(len(models)):
@@ -319,13 +319,13 @@ if __name__ == '__main__':
     # test_dataloader = get_test_dataloader()
 
     # save results to files
-    probabilities = probs(valid_dataloader)
+   #  probabilities = probs(valid_dataloader)
 
     # get threshold
-    model_names = ['fpn_152', 'fpn_50', 'fpn_34'# , 'resnet18', 'resnet34',
-                   # 'resnet50', 'resnet152', 'densenet121', 'densenet161', 'densenet169'
+    model_names = ['fpn_152', 'fpn_50', 'fpn_34', 'resnet18', 'resnet34',
+                   'resnet50', 'resnet152', 'densenet121', 'densenet161', 'densenet169'
                    ]
-    for m in models:
+    for m in models[:3]:
         name = str(m).split()[1].strip('_planet')
         file_names = get_files([n for n in model_names if n != name])
         print('Model {}'.format(name))
@@ -336,4 +336,4 @@ if __name__ == '__main__':
     # predict_test_averaging(threshold)
 
     # majority voting
-    predict_test_majority()
+    # predict_test_majority()
