@@ -216,6 +216,7 @@ def train_baselines():
             logger.save_time(start_time=t, end_time=time.time())
 
 
+
 if __name__ == '__main__':
     train_baselines()
 
