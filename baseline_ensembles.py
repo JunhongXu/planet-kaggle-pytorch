@@ -321,7 +321,7 @@ def predict_test_averaging(t):
 
     preds = preds/(len(models) * len(transforms))
     # preds = preds / len(models)
-    pred_csv(predictions=preds, threshold=t, name='transforms-resnet152_densenet161_densent169-ensembels')
+    pred_csv(predictions=preds, threshold=t, name='fpn-152')
 
 
 if __name__ == '__main__':
