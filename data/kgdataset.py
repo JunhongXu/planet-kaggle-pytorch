@@ -6,7 +6,7 @@ import random
 import math
 import torch
 
-KAGGLE_DATA_DIR ='/media/jxu7/BACK-UP/Data/AmazonPlanet'
+KAGGLE_DATA_DIR ='../../../kaggle'
 CLASS_NAMES=[
     'clear',    	 # 0
     'haze',	         # 1

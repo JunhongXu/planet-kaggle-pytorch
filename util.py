@@ -48,7 +48,7 @@ def pred_csv(predictions, name, threshold=None):
         labels = np.where(labels == 1)[0]
         labels = ' '.join(idx_name()[index] for index in labels)
         submission['tags'][i] = labels
-        print('Index ', i)
+        # print('Index ', i)
     submission.to_csv(os.path.join('submissions', '{}.csv'.format(name)), index=False)
 
 
@@ -105,28 +105,23 @@ def get_learning_rate(optimizer):
     return lr
 
 
-def lr_schedule(epoch, optimizer, base_lr=0.1, pretrained=False):
-    if pretrained:
-        if 0 <= epoch < 10:
-            lr = base_lr
-        elif 10 <= epoch < 25:
-            lr = base_lr * 0.5
-        elif 25 <= epoch < 40:
-            lr = base_lr * 0.1
-        else:
-            lr = base_lr * 0.01
+def lr_schedule(epoch, optimizer):
+    if 0 <= epoch < 10:
+        lr = 0.01
+    elif 10 <= epoch < 25:
+        lr = 0.005
+    elif 25 <= epoch < 40:
+        lr = 0.001
+    elif 40 <= epoch < 50:
+        lr = 0.0005
     else:
-        if 0 <= epoch < 10:
-            lr = 1e-1
-        elif 10 <= epoch < 25:
-            lr = 5e-2
-        elif 25 <= epoch < 40:
-            lr = 1e-2
-        else:
-            lr = 1e-3
+        lr = 0.0001
 
-    for para_group in optimizer.param_groups:
-        para_group['lr'] = lr
+    for param_idx, param_group in enumerate(optimizer.param_groups):
+        print(param_group)
+        param_group['lr'] = lr
+        if param_idx == (len(optimizer.param_groups) - 1):
+            param_group['lr'] = lr * 10
 
 
 def split_train_validation(num_val=3000):
