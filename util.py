@@ -102,7 +102,6 @@ def get_learning_rate(optimizer):
     for param_group in optimizer.param_groups:
         if 'lr' in param_group:
             lr +=[param_group['lr']]
-            print(lr)
     return lr
 
 
@@ -121,7 +120,6 @@ def lr_schedule(epoch, optimizer):
     for param_idx, param_group in enumerate(optimizer.param_groups):
         param_group['lr'] = lr
         if param_idx == (len(optimizer.param_groups) - 1):
-            print(param_idx)
             param_group['lr'] = lr * 10
 
 
