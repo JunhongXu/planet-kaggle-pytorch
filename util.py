@@ -118,9 +118,10 @@ def lr_schedule(epoch, optimizer):
         lr = 0.0001
 
     for param_idx, param_group in enumerate(optimizer.param_groups):
-        print(param_group)
+
         param_group['lr'] = lr
         if param_idx == (len(optimizer.param_groups) - 1):
+            print(param_group)
             param_group['lr'] = lr * 10
 
 
