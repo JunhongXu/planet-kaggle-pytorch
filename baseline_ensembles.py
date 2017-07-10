@@ -53,19 +53,21 @@ def verticalFlip(imgs):
 
 
 def crop224x224(imgs):
+    N, H, W, C = imgs.shape
+    cropped_imgs = np.empty((N, 224, 224, C))
     for index, img in enumerate(imgs):
-        H, W, C = imgs.shape
+        H, W, C = img.shape
         dx = (H - 224)//2
         dy = (W - 224)//2
-        imgs[index] = img[dx:(H-dx), dy:(W-dy)]
-    return imgs
+        cropped_imgs[index] = img[dx:(H-dx), dy:(W-dy)]
+    return cropped_imgs
 
 
 mean = [0.31151703, 0.34061992, 0.29885209]
 std = [0.16730586, 0.14391145, 0.13747531]
 
 
-transforms = [default, rotate90, rotate180, rotate270, verticalFlip, horizontalFlip, crop224x224]
+transforms = [rotate90, rotate180, rotate270, verticalFlip, horizontalFlip, default]
 
 models = [
             resnet18_planet,
@@ -199,9 +201,9 @@ def predict_test_majority():
     labels = np.empty((len(models), 61191, 17))
     for m_idx, model in enumerate(models):
         name = str(model).split()[1]
-        t = thresholds[name]
+        threshold = thresholds[name]
         print('predicting model {}'.format(name))
-        print('threshold is', t)
+        print('threshold is', threshold)
         net = nn.DataParallel(model().cuda())
         net.load_state_dict(torch.load('models/full_data_{}.pth'.format(name)))
         net.eval()
@@ -210,14 +212,14 @@ def predict_test_majority():
             test_dataloader.dataset.images = t(test_dataloader.dataset.images)
             print(t, name)
             p = predict(net, dataloader=test_dataloader)
-            preds = preds + (p > t).astype(int)
+            preds = preds + (p > threshold).astype(int)
         # get predictions for the single model
         # preds = preds/len(transforms)
         # np.savetxt('submission_probs/full_data_{}.txt'.format(name), preds)
         # get labels
         # preds = (preds > thresholds[m_idx]).astype(int)
         preds = (preds > (len(transforms)//2)).astype(int)
-        np.savetxt('submission_preds/full_data_{}_{}.txt'.format(str(transforms).split()[1], name), preds)
+        np.savetxt('submission_preds/full_data_{}.txt'.format(name), preds)
         labels[m_idx] = preds
 
     # majority voting
