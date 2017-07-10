@@ -321,12 +321,12 @@ if __name__ == '__main__':
     # test_dataloader = get_test_dataloader()
 
     # save results to files
-    probabilities = probs(valid_dataloader)
+    # probabilities = probs(valid_dataloader)
 
     # get threshold
     model_names = ['resnet18', 'resnet34','resnet50', 'resnet152', 'densenet121', 'densenet161', 'densenet169']
 
-    for m in models[:3]:
+    for m in models:
         name = str(m).split()[1].strip('_planet')
         file_names = get_files([n for n in model_names if n != name])
         print('Model {}'.format(name))
@@ -337,4 +337,4 @@ if __name__ == '__main__':
     # predict_test_averaging(thresholds[0])
 
     # majority voting
-    predict_test_majority()
+   # predict_test_majority()
