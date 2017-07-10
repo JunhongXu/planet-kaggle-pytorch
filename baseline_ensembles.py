@@ -70,7 +70,7 @@ std = [0.16730586, 0.14391145, 0.13747531]
 transforms = [rotate90, rotate180, rotate270, verticalFlip, horizontalFlip, default]
 
 models = [
-            resnet18_planet,
+            # resnet18_planet,
             resnet34_planet,
             resnet50_planet,
             resnet152_planet,
@@ -201,30 +201,36 @@ def predict_test_majority():
     labels = np.empty((len(models), 61191, 17))
     for m_idx, model in enumerate(models):
         name = str(model).split()[1]
-        threshold = thresholds[name]
-        print('predicting model {}'.format(name))
-        print('threshold is', threshold)
-        net = nn.DataParallel(model().cuda())
-        net.load_state_dict(torch.load('models/full_data_{}.pth'.format(name)))
-        net.eval()
-        preds = np.zeros((61191, 17))
-        for t in transforms:
-            test_dataloader.dataset.images = t(test_dataloader.dataset.images)
-            print(t, name)
-            p = predict(net, dataloader=test_dataloader)
-            preds = preds + (p > threshold).astype(int)
-        # get predictions for the single model
-        # preds = preds/len(transforms)
-        # np.savetxt('submission_probs/full_data_{}.txt'.format(name), preds)
-        # get labels
-        # preds = (preds > thresholds[m_idx]).astype(int)
-        preds = (preds > (len(transforms)//2)).astype(int)
-        np.savetxt('submission_preds/full_data_{}.txt'.format(name), preds)
+        preds = np.loadtxt('submisson_preds/{}.txt'.format(name))
         labels[m_idx] = preds
+    labels = np.sum(labels, axis=0)
+    labels = (labels > (len(models)//2)).astype(int)
+    # for m_idx, model in enumerate(models):
+    #     name = str(model).split()[1]
+    #     threshold = thresholds[name]
+    #     print('predicting model {}'.format(name))
+    #     print('threshold is', threshold)
+    #     net = nn.DataParallel(model().cuda())
+    #     net.load_state_dict(torch.load('models/full_data_{}.pth'.format(name)))
+    #     net.eval()
+    #     preds = np.zeros((61191, 17))
+    #     for t in transforms:
+    #         test_dataloader.dataset.images = t(test_dataloader.dataset.images)
+    #         print(t, name)
+    #         p = predict(net, dataloader=test_dataloader)
+    #         preds = preds + (p > threshold).astype(int)
+    #     # get predictions for the single model
+    #     # preds = preds/len(transforms)
+    #     # np.savetxt('submission_probs/full_data_{}.txt'.format(name), preds)
+    #     # get labels
+    #     # preds = (preds > thresholds[m_idx]).astype(int)
+    #     preds = (preds > (len(transforms)//2)).astype(int)
+    #     np.savetxt('submission_preds/full_data_{}.txt'.format(name), preds)
+    #     labels[m_idx] = preds
 
     # majority voting
-    labels = labels.sum(axis=0)
-    labels = (labels >= (len(models)//2)).astype(int)
+    # labels = labels.sum(axis=0)
+    # labels = (labels >= (len(models)//2)).astype(int)
     pred_csv(predictions=labels, name='majority_voting_ensembles_full_data_v2_all')
 
 
