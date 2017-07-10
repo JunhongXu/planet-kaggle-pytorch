@@ -217,7 +217,7 @@ def predict_test_majority():
         # get labels
         # preds = (preds > thresholds[m_idx]).astype(int)
         preds = (preds > (len(transforms)//2)).astype(int)
-        np.savetxt('submission_preds/full_data_{}_{}.txt'.format(str(transforms).split()[1], name), p)
+        np.savetxt('submission_preds/full_data_{}_{}.txt'.format(str(transforms).split()[1], name), preds)
         labels[m_idx] = preds
 
     # majority voting
