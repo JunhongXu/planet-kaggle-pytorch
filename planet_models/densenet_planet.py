@@ -14,6 +14,7 @@ def densenet201(num_classes=17, pretrained=False):
         # update model dictionary using pretrained model without classifier layer
         model_dict.update({key: pretrained_dict[key] for key in pretrained_dict.keys() if 'classifier' not in key})
         model.load_state_dict(model_dict)
+    return model
 
 
 def densenet121(num_classes=17, pretrained=False):
