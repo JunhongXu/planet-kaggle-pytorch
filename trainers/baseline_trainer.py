@@ -2,8 +2,9 @@ import torch.nn as nn
 from torch.nn import functional as F
 from torch import optim
 from torchvision.transforms import Lambda, Compose, Normalize
-from planet_models.densenet_planet import densenet169, densenet121, densenet161
-from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet, resnet152_planet
+from planet_models.densenet_planet import densenet169, densenet121, densenet161, densenet201
+from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet, resnet101_planet, \
+    resnet152_planet
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from datasets import mean, std
@@ -37,24 +38,27 @@ A baseline trainer trains the models as followed:
 
 
 models = [
-            resnet18_planet, resnet34_planet,
-            resnet50_planet,
-            densenet121,
-            densenet169,
-            densenet161,
-            resnet152_planet
+            # resnet18_planet, resnet34_planet,
+            # resnet50_planet,
+            # densenet121,
+            # densenet169,
+            # densenet161,
+            # resnet152_planet
+            densenet201,
+            resnet101_planet
           ]
 batch_size = [
-                128, 128,
-                64, 64,
-                40, 40,
-                50
+                # 128, 128,
+                # 64, 64,
+                # 40, 40,
+                # 50
+                50, 64
             ]
 
 
 def get_dataloader(batch_size):
     train_data = KgForestDataset(
-        split='train-40479',
+        split='train-37479',
         transform=Compose(
             [
                 Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
@@ -70,7 +74,7 @@ def get_dataloader(batch_size):
     train_data_loader = DataLoader(batch_size=batch_size, dataset=train_data, shuffle=True)
 
     validation = KgForestDataset(
-        split='valid-8000',
+        split='valid-3000',
         transform=Compose(
             [
                 # Lambda(lambda x: randomShiftScaleRotate(x, u=0.75, shift_limit=6, scale_limit=6, rotate_limit=45)),
@@ -134,7 +138,7 @@ def train_baselines():
         train_data.batch_size = batch
         val_data.batch_size = batch
 
-        num_epoches = 40
+        num_epoches = 60
         print_every_iter = 20
         epoch_test = 1
 
