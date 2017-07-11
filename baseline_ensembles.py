@@ -71,7 +71,7 @@ transforms = [rotate90, rotate180, rotate270, verticalFlip, horizontalFlip, defa
 
 models = [
             # resnet18_planet,
-            resnet34_planet,
+            # resnet34_planet,
             resnet50_planet,
             resnet152_planet,
             densenet121,
@@ -200,8 +200,12 @@ def predict_test_majority():
     """
     labels = np.empty((len(models), 61191, 17))
     for m_idx, model in enumerate(models):
+        print('Loading name {}'.format(model))
         name = str(model).split()[1]
-        preds = np.loadtxt('submisson_preds/{}.txt'.format(name))
+        # /home/jxu7/Research/planet-competition/submission_preds/full_data_resnet34_planet.txt
+        preds = np.loadtxt('submission_preds/full_data_{}.txt'.format(name))
+        if name == 'resnet152':
+            preds = preds * 2
         labels[m_idx] = preds
     labels = np.sum(labels, axis=0)
     labels = (labels > (len(models)//2)).astype(int)
@@ -258,7 +262,7 @@ def predict_test_averaging(t):
 
 if __name__ == '__main__':
     # valid_dataloader = get_validation_loader()
-    test_dataloader = get_test_dataloader()
+    # test_dataloader = get_test_dataloader()
 
     # save results to files
     # probabilities = probs(valid_dataloader)
