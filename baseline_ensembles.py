@@ -80,8 +80,8 @@ models = [
             # densenet161,
             # densenet169,
             densenet201,
-            # fpn_152,
-            # fpn_50,
+            fpn_152,
+            fpn_50,
             # fpn_34
         ]
 
@@ -198,6 +198,32 @@ def get_files(excludes=None):
     return names
 
 
+def make_test_labels():
+    # labels = np.empty((len(models), 61191, 17))
+    for m_idx, model in enumerate(models):
+        name = str(model).split()[1]
+        threshold = thresholds[name]
+        print('Model {}'.format(name))
+        print('threshold is {}'.format(threshold))
+        net = nn.DataParallel(model().cuda())
+        net.load_state_dict(torch.load('models/full_data_{}.pth'.format(name)))
+        net.eval()
+        preds = np.zeros((61191, 17))
+        for t in transforms:
+            test_dataloader.dataset.images = t(test_dataloader.dataset.images)
+            print(t, name)
+            p = predict(net, dataloader=test_dataloader)
+            preds = preds + (p > threshold).astype(int)
+            # get predictions for the single model
+            # preds = preds/len(transforms)
+            # np.savetxt('submission_probs/full_data_{}.txt'.format(name), preds)
+            # get labels
+            # preds = (preds > thresholds[m_idx]).astype(int)
+        preds = (preds > (len(transforms)//2)).astype(int)
+        np.savetxt('submission_preds/full_data_{}.txt'.format(name), preds)
+        # labels[m_idx] = preds
+
+
 def predict_test_majority():
     """
     Majority voting method.
@@ -265,25 +291,25 @@ def predict_test_averaging(t):
 
 
 if __name__ == '__main__':
-    valid_dataloader = get_validation_loader()
-    # test_dataloader = get_test_dataloader()
+    # valid_dataloader = get_validation_loader()
+    test_dataloader = get_test_dataloader()
 
     # save results to files
-    probabilities = probs(valid_dataloader)
-
-    # get threshold
-    model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'densenet121', 'densenet161', 'densenet169', 'densenet201']
-
-    for m in models[:3]:
-        name = str(m).split()[1].strip('_planet')
-        file_names = get_files([n for n in model_names if n != name])
-        print('Model {}'.format(name))
-        t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
-        print(list(t))
+    # probabilities = probs(valid_dataloader)
+    #
+    # # get threshold
+    # model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'densenet121', 'densenet161', 'densenet169', 'densenet201']
+    #
+    # for m in models[:3]:
+    #     name = str(m).split()[1].strip('_planet')
+    #     file_names = get_files([n for n in model_names if n != name])
+    #     print('Model {}'.format(name))
+    #     t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
+    #     print(list(t))
 
     # average testing
     # predict_test_averaging(thresholds[0])
 
-
     # majority voting
-    # predict_test_majority()
+    make_test_labels()
+    predict_test_majority()
