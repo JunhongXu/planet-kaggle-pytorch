@@ -312,4 +312,4 @@ if __name__ == '__main__':
 
     # majority voting
     make_test_labels()
-    predict_test_majority()
+    # predict_test_majority()
