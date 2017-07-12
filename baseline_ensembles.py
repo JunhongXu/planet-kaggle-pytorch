@@ -7,9 +7,10 @@ from torch.autograd import Variable
 from data.kgdataset import KgForestDataset, toTensor
 from torchvision.transforms import Normalize, Compose, Lambda
 import glob
-from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet, resnet152_planet
+from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet, resnet101_planet, \
+    resnet152_planet
 from planet_models.fpn import fpn_34, fpn_152, fpn_50
-from planet_models.densenet_planet import densenet161, densenet121, densenet169
+from planet_models.densenet_planet import densenet161, densenet121, densenet169, densenet201
 from util import predict, f2_score, pred_csv
 from data import kgdataset
 from thresholds import thresholds
@@ -72,11 +73,13 @@ transforms = [rotate90, rotate180, rotate270, verticalFlip, horizontalFlip, defa
 models = [
             # resnet18_planet,
             # resnet34_planet,
-            resnet50_planet,
-            resnet152_planet,
-            densenet121,
-            densenet161,
-            densenet169,
+            # resnet50_planet,
+            resnet101_planet,
+            # resnet152_planet,
+            # densenet121,
+            # densenet161,
+            # densenet169,
+            densenet201,
             # fpn_152,
             # fpn_50,
             # fpn_34
@@ -190,6 +193,7 @@ def get_files(excludes=None):
     names = []
     for filename in file_names:
         if not any([exclude in filename for exclude in excludes]):
+            # if 'resnet101_planet' in file_names
             names.append(filename)
     return names
 
@@ -261,25 +265,25 @@ def predict_test_averaging(t):
 
 
 if __name__ == '__main__':
-    # valid_dataloader = get_validation_loader()
+    valid_dataloader = get_validation_loader()
     # test_dataloader = get_test_dataloader()
 
     # save results to files
-    # probabilities = probs(valid_dataloader)
+    probabilities = probs(valid_dataloader)
 
     # get threshold
-    # model_names = ['resnet18', 'resnet34','resnet50', 'resnet152', 'densenet121', 'densenet161', 'densenet169']
+    model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet152', 'densenet121', 'densenet161', 'densenet169']
 
-    # for m in models[:3]:
-    #     name = str(m).split()[1].strip('_planet')
-    #     file_names = get_files([n for n in model_names if n != name])
-    #     print('Model {}'.format(name))
-    #     t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
-    #     print(list(t))
+    for m in models[:3]:
+        name = str(m).split()[1].strip('_planet')
+        file_names = get_files([n for n in model_names if n != name])
+        print('Model {}'.format(name))
+        t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
+        print(list(t))
 
     # average testing
     # predict_test_averaging(thresholds[0])
 
 
     # majority voting
-    predict_test_majority()
+    # predict_test_majority()
