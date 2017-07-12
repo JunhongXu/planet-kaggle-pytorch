@@ -234,8 +234,6 @@ def predict_test_majority():
         name = str(model).split()[1]
         # /home/jxu7/Research/planet-competition/submission_preds/full_data_resnet34_planet.txt
         preds = np.loadtxt('submission_preds/full_data_{}.txt'.format(name))
-        if name == 'resnet152':
-            preds = preds * 2
         labels[m_idx] = preds
     labels = np.sum(labels, axis=0)
     labels = (labels > (len(models)//2)).astype(int)
@@ -311,5 +309,5 @@ if __name__ == '__main__':
     # predict_test_averaging(thresholds[0])
 
     # majority voting
-    make_test_labels()
-    # predict_test_majority()
+    # make_test_labels()
+    predict_test_majority()
