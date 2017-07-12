@@ -272,7 +272,7 @@ if __name__ == '__main__':
     probabilities = probs(valid_dataloader)
 
     # get threshold
-    model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet152', 'densenet121', 'densenet161', 'densenet169']
+    model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'densenet121', 'densenet161', 'densenet169', 'densenet201']
 
     for m in models[:3]:
         name = str(m).split()[1].strip('_planet')
