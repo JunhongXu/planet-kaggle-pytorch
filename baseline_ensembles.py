@@ -290,7 +290,7 @@ def predict_test_averaging(t):
 
 if __name__ == '__main__':
     # valid_dataloader = get_validation_loader()
-    test_dataloader = get_test_dataloader()
+    # test_dataloader = get_test_dataloader()
 
     # save results to files
     # probabilities = probs(valid_dataloader)
