@@ -73,15 +73,15 @@ transforms = [rotate90, rotate180, rotate270, verticalFlip, horizontalFlip, defa
 models = [
             # resnet18_planet,
             # resnet34_planet,
-            # resnet50_planet,
+            resnet50_planet,
             resnet101_planet,
-            # resnet152_planet,
-            # densenet121,
-            # densenet161,
-            # densenet169,
+            resnet152_planet,
+            densenet121,
+            densenet161,
+            densenet169,
             densenet201,
-            fpn_152,
-            fpn_50,
+            # fpn_152,
+            # fpn_50,
             # fpn_34
         ]
 
@@ -236,7 +236,12 @@ def predict_test_majority():
         preds = np.loadtxt('submission_preds/full_data_{}.txt'.format(name))
         labels[m_idx] = preds
     labels = np.sum(labels, axis=0)
-    labels = (labels > (len(models)//2)).astype(int)
+    if len(models) // 2 == 0:
+        labels = (labels > (len(models)//2)).astype(int)
+    elif len(models) == 1:
+        labels = labels
+    else:
+        labels = (labels >= (len(models) // 2)).astype(int)
     # for m_idx, model in enumerate(models):
     #     name = str(model).split()[1]
     #     threshold = thresholds[name]
@@ -263,7 +268,7 @@ def predict_test_majority():
     # majority voting
     # labels = labels.sum(axis=0)
     # labels = (labels >= (len(models)//2)).astype(int)
-    pred_csv(predictions=labels, name='majority_voting_ensembles_full_data_v2_all')
+    pred_csv(predictions=labels, name='resnet101_resnet152_densenets')
 
 
 def predict_test_averaging(t):
