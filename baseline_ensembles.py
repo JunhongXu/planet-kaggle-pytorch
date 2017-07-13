@@ -242,6 +242,7 @@ def predict_test_majority():
         labels = labels
     else:
         labels = (labels >= (len(models) // 2)).astype(int)
+
     # for m_idx, model in enumerate(models):
     #     name = str(model).split()[1]
     #     threshold = thresholds[name]
