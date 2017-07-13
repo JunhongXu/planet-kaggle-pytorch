@@ -71,17 +71,17 @@ std = [0.16730586, 0.14391145, 0.13747531]
 transforms = [rotate90, rotate180, rotate270, verticalFlip, horizontalFlip, default]
 
 models = [
-            # resnet18_planet,
-            # resnet34_planet,
-            # resnet50_planet,
+            resnet18_planet,
+            resnet34_planet,
+            resnet50_planet,
             resnet101_planet,
-            # resnet152_planet,
-            # densenet121,
-            # densenet161,
-            # densenet169,
+            resnet152_planet,
+            densenet121,
+            densenet161,
+            densenet169,
             densenet201,
             fpn_152,
-            fpn_50,
+            # fpn_50,
             # fpn_34
         ]
 
@@ -290,7 +290,7 @@ def predict_test_averaging(t):
 
 if __name__ == '__main__':
     # valid_dataloader = get_validation_loader()
-    test_dataloader = get_test_dataloader()
+    #test_dataloader = get_test_dataloader()
 
     # save results to files
     # probabilities = probs(valid_dataloader)
