@@ -235,6 +235,7 @@ def predict_test_majority():
         # /home/jxu7/Research/planet-competition/submission_preds/full_data_resnet34_planet.txt
         preds = np.loadtxt('submission_preds/full_data_{}.txt'.format(name))
         labels[m_idx] = preds
+
     labels = np.sum(labels, axis=0)
 
     labels = (labels > (len(models)//2)).astype(int)
