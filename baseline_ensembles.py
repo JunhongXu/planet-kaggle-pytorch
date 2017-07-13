@@ -236,6 +236,7 @@ def predict_test_majority():
         preds = np.loadtxt('submission_preds/full_data_{}.txt'.format(name))
         labels[m_idx] = preds
     labels = np.sum(labels, axis=0)
+
     labels = (labels > (len(models)//2)).astype(int)
     # for m_idx, model in enumerate(models):
     #     name = str(model).split()[1]
