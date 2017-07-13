@@ -71,8 +71,8 @@ std = [0.16730586, 0.14391145, 0.13747531]
 transforms = [rotate90, rotate180, rotate270, verticalFlip, horizontalFlip, default]
 
 models = [
-            resnet18_planet,
-            resnet34_planet,
+            # resnet18_planet,
+            # resnet34_planet,
             resnet50_planet,
             resnet101_planet,
             resnet152_planet,
@@ -80,7 +80,7 @@ models = [
             densenet161,
             densenet169,
             densenet201,
-            fpn_152,
+            # fpn_152,
             # fpn_50,
             # fpn_34
         ]
@@ -235,10 +235,14 @@ def predict_test_majority():
         # /home/jxu7/Research/planet-competition/submission_preds/full_data_resnet34_planet.txt
         preds = np.loadtxt('submission_preds/full_data_{}.txt'.format(name))
         labels[m_idx] = preds
-
     labels = np.sum(labels, axis=0)
+    if len(models) // 2 == 0:
+        labels = (labels > (len(models)//2)).astype(int)
+    elif len(models) == 1:
+        labels = labels
+    else:
+        labels = (labels >= (len(models) // 2)).astype(int)
 
-    labels = (labels > (len(models)//2)).astype(int)
     # for m_idx, model in enumerate(models):
     #     name = str(model).split()[1]
     #     threshold = thresholds[name]
@@ -265,7 +269,7 @@ def predict_test_majority():
     # majority voting
     # labels = labels.sum(axis=0)
     # labels = (labels >= (len(models)//2)).astype(int)
-    pred_csv(predictions=labels, name='majority_voting_ensembles_full_data_v2_all')
+    pred_csv(predictions=labels, name='resnet101_resnet152_densenets')
 
 
 def predict_test_averaging(t):
@@ -292,7 +296,7 @@ def predict_test_averaging(t):
 
 if __name__ == '__main__':
     # valid_dataloader = get_validation_loader()
-    #test_dataloader = get_test_dataloader()
+    # test_dataloader = get_test_dataloader()
 
     # save results to files
     # probabilities = probs(valid_dataloader)
