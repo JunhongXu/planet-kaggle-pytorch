@@ -29,13 +29,15 @@ class Blender(nn.Module):
 
     def forward(self, x):
         logits = []
+        inference = True if x.volatile else False
         for m in self.models:
             # make the network in inference mode
             x.volatile = True
             l=m(x)
             # l = F.relu(m(x))       # do we need this?
             logits.append(l)
-        x.volatile = False
+        if not inference:
+            x.volatile = False
         logits = torch.cat(logits, 1)
         logits = logits.view(-1, len(models_names) * 17)
         logits = self.weighing(logits)
