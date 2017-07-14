@@ -154,7 +154,7 @@ def train_blender():
             # save if the current loss is better
             if test_loss < best_test_loss:
                 print('save {} {}'.format(test_loss, best_test_loss))
-                torch.save(net.state_dict(), '../models/full_data_{}.pth'.format(name))
+                torch.save(net.state_dict(), '../models/full_data_{}_adam.pth'.format(name))
                 best_test_loss = test_loss
 
         logger.add_record('train_loss', total_epoch_loss)
