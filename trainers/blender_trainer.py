@@ -51,7 +51,7 @@ def get_dataloader(batch_size):
 
 
 def get_optimizer(net, lr):
-    optimizer = optim.SGD(params=net.module.weighing.parameters(), lr=lr, weight_decay=5e-4, momentum=.9)
+    optimizer = optim.SGD(params=net.weighing.parameters(), lr=lr, weight_decay=5e-4, momentum=.9)
     return optimizer
 
 
@@ -79,15 +79,18 @@ def train_blender():
     logger = Logger('../log/{}'.format(name), name)
 
     net = Blender()
-    net = nn.DataParallel(net.cuda())
+    net.load_state_dict(torch.load('../models/full_data_blender.pth'))
+    # net = nn.DataParallel(net.cuda())
     # load_net(net, name)
     # optimizer = get_optimizer(net, lr=.001, pretrained=True, resnet=True if 'resnet' in name else False)
     # optimizer = optim.SGD(lr=.005, momentum=0.9, params=net.parameters(), weight_decay=5e-4)
+    print(net)
     optimizer = get_optimizer(net, lr=0.01)
-    train_data.batch_size = 10
-    val_data.batch_size = 10
+    # optimizer = optim.Adam(net.weighing.parameters(), lr=1e-3, weight_decay=5e-4)
+    train_data.batch_size = 128
+    val_data.batch_size = 128
 
-    num_epoches = 30
+    num_epoches = 60
     print_every_iter = 20
     epoch_test = 1
 
@@ -97,7 +100,7 @@ def train_blender():
     best_test_loss = np.inf
     t = time.time()
 
-    for epoch in range(num_epoches):  # loop over the dataset multiple times
+    for epoch in range(30, num_epoches):  # loop over the dataset multiple times
 
         # train loss averaged every epoch
         total_epoch_loss = 0.0
@@ -117,10 +120,8 @@ def train_blender():
             logits = net(Variable(images.cuda()))
             probs = F.sigmoid(logits)
             loss = multi_criterion(logits, labels.cuda())
-            print(loss)
             optimizer.zero_grad()
             loss.backward()
-            print(it, loss)
             optimizer.step()
 
             # additional metrics

@@ -1,10 +1,11 @@
 import torch.nn as nn
 import torch
 from torch.nn import functional as F
+from torch.autograd import Variable
 from planet_models.resnet_planet import resnet50_planet, resnet101_planet, resnet152_planet
 from planet_models.densenet_planet import densenet201, densenet169, densenet121, densenet161
 
-models_names = [resnet152_planet, densenet121, densenet161, densenet169, densenet201]
+models_names = [resnet50_planet, resnet101_planet, resnet152_planet, densenet121, densenet161, densenet169, densenet201]
 
 
 class Blender(nn.Module):
@@ -25,30 +26,34 @@ class Blender(nn.Module):
             for p in model.parameters():
                 p.requires_grad = False
             self.models.append(model)
-        self.weighing = nn.Linear(in_features=len(models_names)*17, out_features=17)
+        self.weighing = nn.Sequential(
+            nn.BatchNorm1d(len(models_names)*17),
+            nn.Linear(in_features=len(models_names)*17, out_features=17)
+        )
 
     def forward(self, x):
         logits = []
-        inference = True if x.volatile else False
+        inference_x = Variable(x.data, volatile=True)
         for m in self.models:
             # make the network in inference mode
-            x.volatile = True
-            l=m(x)
+            l=m(inference_x)
             # l = F.relu(m(x))       # do we need this?
             logits.append(l)
-        if not inference:
-            x.volatile = False
-        logits = torch.cat(logits, 1)
+        logits = Variable(torch.cat(logits, 1).data)
         logits = logits.view(-1, len(models_names) * 17)
         logits = self.weighing(logits)
         return logits
 
 
 if __name__ == '__main__':
-    from torch.autograd import Variable
     b = Blender().cuda()
-    for m in b.models:
-        for p in m.parameters():
-            print(p.requires_grad)
-    v = Variable(torch.randn(256, 3, 256, 256), volatile=True).cuda()
-    print(b(v))
+    v = Variable(torch.randn(128, 3, 256, 256)).cuda()
+    gt = Variable(torch.randn(128, 17)).cuda()
+    pred =  b(v)
+    loss = pred - gt
+    loss = torch.mean(loss)
+    loss.backward()
+    for p in b.parameters():
+        print(p.grad)
+    print(pred)
+    # print(b(v))
