@@ -79,14 +79,14 @@ def train_blender():
     logger = Logger('../log/{}'.format(name), name)
 
     net = Blender()
-    net.load_state_dict(torch.load('../models/full_data_blender.pth'))
+    # net.load_state_dict(torch.load('../models/full_data_blender.pth'))
     # net = nn.DataParallel(net.cuda())
     # load_net(net, name)
     # optimizer = get_optimizer(net, lr=.001, pretrained=True, resnet=True if 'resnet' in name else False)
     # optimizer = optim.SGD(lr=.005, momentum=0.9, params=net.parameters(), weight_decay=5e-4)
     print(net)
-    optimizer = get_optimizer(net, lr=0.01)
-    # optimizer = optim.Adam(net.weighing.parameters(), lr=1e-3, weight_decay=5e-4)
+    # optimizer = get_optimizer(net, lr=0.01)
+    optimizer = optim.Adam(net.weighing.parameters(), lr=5e-4, weight_decay=5e-4)
     train_data.batch_size = 128
     val_data.batch_size = 128
 
@@ -100,7 +100,7 @@ def train_blender():
     best_test_loss = np.inf
     t = time.time()
 
-    for epoch in range(30, num_epoches):  # loop over the dataset multiple times
+    for epoch in range(0, num_epoches):  # loop over the dataset multiple times
 
         # train loss averaged every epoch
         total_epoch_loss = 0.0
