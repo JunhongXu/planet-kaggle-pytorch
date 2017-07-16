@@ -57,13 +57,13 @@ def get_optimizer(net, lr):
 
 def lr_schedule(epoch, optimizer):
     if 0 <= epoch < 10:
-        lr = 0.1
-    elif 10 <= epoch < 25:
         lr = 0.05
-    elif 25 <= epoch < 40:
+    elif 10 <= epoch < 25:
         lr = 0.01
+    elif 25 <= epoch < 40:
+        lr = 0.005
     else:
-        lr = 0.001
+        lr = 0.0001
 
     for para_group in optimizer.param_groups:
         para_group['lr'] = lr
@@ -85,8 +85,8 @@ def train_blender():
     # optimizer = get_optimizer(net, lr=.001, pretrained=True, resnet=True if 'resnet' in name else False)
     # optimizer = optim.SGD(lr=.005, momentum=0.9, params=net.parameters(), weight_decay=5e-4)
     print(net)
-    # optimizer = get_optimizer(net, lr=0.01)
-    optimizer = optim.Adam(net.weighing.parameters(), lr=5e-4, weight_decay=5e-4)
+    optimizer = get_optimizer(net, lr=0.01)
+    # optimizer = optim.Adam(net.weighing.parameters(), lr=5e-4, weight_decay=5e-4)
     train_data.batch_size = 128
     val_data.batch_size = 128
 

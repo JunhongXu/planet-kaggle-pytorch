@@ -29,8 +29,8 @@ class Blender(nn.Module):
         self.weighing = nn.Sequential(
             nn.BatchNorm1d(len(models_names)*17),
             nn.Linear(in_features=len(models_names)*17, out_features=256, bias=False),
-            
             nn.BatchNorm1d(256),
+            nn.ReLU(),
             nn.Linear(in_features=256, out_features=17)
         )
 
