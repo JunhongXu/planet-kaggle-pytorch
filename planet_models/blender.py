@@ -22,7 +22,7 @@ class Blender(nn.Module):
             model.eval()
 
             model = nn.DataParallel(model)
-            model.load_state_dict(torch.load('../models/full_data_{}.pth'.format(name)))
+            model.load_state_dict(torch.load('models/full_data_{}.pth'.format(name)))
             for p in model.parameters():
                 p.requires_grad = False
             self.models.append(model)

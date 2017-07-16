@@ -59,7 +59,7 @@ def find_threshold():
     labels = valid_loader.dataset.labels
     pred_files = [f for f in glob.glob('probs/*.txt') if 'blender' in f]
     for f in pred_files:
-        preds = np.loadtxt(f)
+        selected_preds = np.loadtxt(f)
         t = np.ones(17) * 0.15
         # selected_preds = probabilities[t_idx]
         # selected_preds = np.mean(selected_preds, axis=0)
@@ -69,7 +69,7 @@ def find_threshold():
             for r in range(500):
                 r /= 500
                 t[i] = r
-                preds = (preds > t).astype(int)
+                preds = (selected_preds > t).astype(int)
                 score = f2_score(labels, preds)
                 if score > best_score:
                     best_thresh = r
@@ -110,7 +110,6 @@ if __name__ == '__main__':
 
     valid_loader = get_valid_loader()
     pred_valid()
-    find_threshold()
-
-    test_loader = get_test_dataloader()
-    test_majority_blender()
+    print(list(find_threshold()))
+    # test_loader = get_test_dataloader()
+    # test_majority_blender()

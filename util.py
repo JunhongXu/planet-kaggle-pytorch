@@ -29,6 +29,7 @@ def predict(net, dataloader):
         current = previous + num
         logits = net(Variable(images.cuda(), volatile=True))
         prob = F.sigmoid(logits)
+        print(prob)
         probs[previous:current, :] = prob.data.cpu().numpy()
         print('Batch Index ', batch_idx)
     return probs
