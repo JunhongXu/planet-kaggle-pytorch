@@ -73,14 +73,14 @@ transforms = [rotate90, rotate180, rotate270, verticalFlip, horizontalFlip, defa
 models = [
             # resnet18_planet,
             # resnet34_planet,
-            resnet50_planet,
-            resnet101_planet,
-            resnet152_planet,
-            densenet121,
-            densenet161,
-            densenet169,
-            densenet201,
-            # fpn_152,
+            # resnet50_planet,
+            # resnet101_planet,
+            # resnet152_planet,
+            # densenet121,
+            # densenet161,
+            # densenet169,
+            # densenet201,
+            fpn_152,
             # fpn_50,
             # fpn_34
         ]
@@ -147,7 +147,7 @@ def find_best_threshold(labels, probabilities):
 
 def get_validation_loader():
     validation = KgForestDataset(
-        split='train-40479',
+        split='valid-3000',
         transform=Compose(
             [
                 Lambda(lambda x: toTensor(x)),
@@ -295,7 +295,7 @@ def predict_test_averaging(t):
 
 
 if __name__ == '__main__':
-    # valid_dataloader = get_validation_loader()
+    valid_dataloader = get_validation_loader()
     # test_dataloader = get_test_dataloader()
 
     # save results to files
@@ -304,16 +304,17 @@ if __name__ == '__main__':
     # # get threshold
     # model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'densenet121', 'densenet161', 'densenet169', 'densenet201']
     #
-    # for m in models[:3]:
-    #     name = str(m).split()[1].strip('_planet')
-    #     file_names = get_files([n for n in model_names if n != name])
-    #     print('Model {}'.format(name))
-    #     t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
-    #     print(list(t))
+    for m in [models[0]]:
+        name = str(m).split()[1].strip('_planet')
+        # file_names = get_files([n for n in model_names if n != name])
+        file_names = [f for f in glob.glob('probs/*.txt') if 'fpn152' in f]
+        print('Model {}'.format(file_names))
+        t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
+        print(list(t))
 
     # average testing
     # predict_test_averaging(thresholds[0])
 
     # majority voting
     # make_test_labels()
-    predict_test_majority()
+    # predict_test_majority()
