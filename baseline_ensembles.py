@@ -147,7 +147,7 @@ def find_best_threshold(labels, probabilities):
 
 def get_validation_loader():
     validation = KgForestDataset(
-        split='valid-3000',
+        split='train-40479',
         transform=Compose(
             [
                 Lambda(lambda x: toTensor(x)),
@@ -182,6 +182,7 @@ def do_thresholding(names, models, labels):
     print('filenames', names)
     for t_idx in range(len(transforms)):
         for m_idx in range(len(models)):
+            print(t_idx)
             preds[t_idx, m_idx] = np.loadtxt(names[t_idx + m_idx])
     t = find_best_threshold(labels=labels, probabilities=preds)
     return t
@@ -299,7 +300,7 @@ if __name__ == '__main__':
     # test_dataloader = get_test_dataloader()
 
     # save results to files
-    # probabilities = probs(valid_dataloader)
+    probabilities = probs(valid_dataloader)
     #
     # # get threshold
     # model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'densenet121', 'densenet161', 'densenet169', 'densenet201']
@@ -307,7 +308,7 @@ if __name__ == '__main__':
     for m in [models[0]]:
         name = str(m).split()[1].strip('_planet')
         # file_names = get_files([n for n in model_names if n != name])
-        file_names = [f for f in glob.glob('probs/*.txt') if 'fpn152' in f]
+        file_names = [f for f in glob.glob('probs/*.txt') if 'fpn_152' in f]
         print('Model {}'.format(file_names))
         t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
         print(list(t))

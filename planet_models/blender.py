@@ -28,6 +28,7 @@ class Blender(nn.Module):
             self.models.append(model)
         self.weighing = nn.Sequential(
             nn.BatchNorm1d(len(models_names)*17),
+           #  nn.ReLU(),
             nn.Linear(in_features=len(models_names)*17, out_features=256, bias=False),
             nn.BatchNorm1d(256),
             nn.ReLU(),
@@ -41,7 +42,7 @@ class Blender(nn.Module):
             # make the network in inference mode
             l=m(inference_x)
             # l = F.relu(m(x))       # do we need this?
-            logits.append(l)
+            logits.append(F.sigmoid(l))
         logits = Variable(torch.cat(logits, 1).data)
         logits = logits.view(-1, len(models_names) * 17)
         logits = self.weighing(logits)

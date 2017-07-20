@@ -23,12 +23,15 @@ def predict(net, dataloader):
     num = dataloader.dataset.num
     probs = np.empty((num, 17))
     current = 0
-    for batch_idx, (images, im_ids, _) in enumerate(dataloader):
+    for batch_idx, (images, l, im_ids) in enumerate(dataloader):
         num = images.size(0)
         previous = current
         current = previous + num
         logits = net(Variable(images.cuda(), volatile=True))
         prob = F.sigmoid(logits)
+        # print(prob, l)
+        # print(multi_criterion(logits, l.cuda()))
+        # print(prob)
         probs[previous:current, :] = prob.data.cpu().numpy()
         print('Batch Index ', batch_idx)
     return probs

@@ -104,10 +104,9 @@ def test_majority_blender():
 
 if __name__ == '__main__':
     net = Blender()
-    net.load_state_dict(torch.load('models/full_data_blender_adam.pth'))
-    net.eval()
-    net.cuda()
-
+    net.load_state_dict(torch.load('models/full_data_blender.pth'))
+    # net.eval()
+    net.cuda().eval()
     valid_loader = get_valid_loader()
     pred_valid()
     print(list(find_threshold()))
