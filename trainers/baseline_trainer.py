@@ -182,10 +182,14 @@ def train_baselines():
 
             num_its = len(train_data)
             for it, (images, labels, indices) in enumerate(train_data, 0):
-
-                logits = net(Variable(images.cuda()))
-                probs = F.sigmoid(logits)
-                loss = multi_criterion(logits, labels.cuda())
+                if 'inception' in name:
+                    logits, aux_logits = net(Variable(images.cuda()))
+                    probs, aux_probs = F.sigmoid(logits), F.sigmoid(aux_logits)
+                    loss = multi_criterion(probs, labels.cuda()), multi_criterion(aux_probs, labels.cuda())
+                else:
+                    logits = net(Variable(images.cuda()))
+                    probs = F.sigmoid(logits)
+                    loss = multi_criterion(logits, labels.cuda())
 
                 optimizer.zero_grad()
                 loss.backward()
