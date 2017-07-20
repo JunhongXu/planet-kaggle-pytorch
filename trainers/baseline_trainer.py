@@ -49,7 +49,7 @@ models = [
             # resnet152_planet
             # densenet201,
             # resnet101_planet
-            vgg19_bn_planet,
+            # vgg19_bn_planet,
             inception_v3_planet
           ]
 batch_size = [
@@ -57,7 +57,7 @@ batch_size = [
                 # 64, 64,
                 # 40, 40,
                 # 50
-                128, 64
+                64, 64
             ]
 
 
@@ -103,7 +103,7 @@ def get_dataloader(batch_size, h=256, w=256):
     return train_data_loader, valid_dataloader
 
 
-def get_optimizer(net, lr, resnet=False, pretrained=False):
+def get_optimizer(net, lr, inception=True, resnet=False, pretrained=False):
     if pretrained:
         if resnet:
             parameters = [
@@ -113,12 +113,16 @@ def get_optimizer(net, lr, resnet=False, pretrained=False):
                 {'params': net.layer4.parameters(), 'lr': lr},
                 {'params': net.fc.parameters(), 'lr': lr * 10}
             ]
+        elif inception:
+            parameters = [
+                {'params': net.fc.parameters(), 'lr': lr * 10}
+            ]
         else:
             parameters = [
                 {'params': net.features.parameters(), 'lr': lr},
                 {'params': net.classifier.parameters(), 'lr': lr * 10}
             ]
-        optimizer = optim.SGD(params=parameters, weight_decay=5e-4, momentum=.9)
+        optimizer = optim.SGD(params=parameters, weight_decay=5e-4, momentum=.9, lr=lr)
     else:
         optimizer = optim.SGD(params=net.parameters(), lr=lr, weight_decay=5e-4, momentum=.9)
     return optimizer
@@ -152,7 +156,7 @@ def train_baselines():
         train_data.batch_size = batch
         val_data.batch_size = batch
 
-        num_epoches = 60
+        num_epoches = 40
         print_every_iter = 20
         epoch_test = 1
 

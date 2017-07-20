@@ -112,11 +112,11 @@ def lr_schedule(epoch, optimizer):
     if 0 <= epoch < 10:
         lr = 0.01
     elif 10 <= epoch < 25:
-        lr = 0.005
-    elif 25 <= epoch < 40:
         lr = 0.001
+    elif 25 <= epoch < 40:
+        lr = 0.00005
     elif 40 <= epoch < 50:
-        lr = 0.0005
+        lr = 0.00001
     else:
         lr = 0.0001
 
