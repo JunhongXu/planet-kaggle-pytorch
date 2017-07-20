@@ -5,6 +5,9 @@ from torchvision.transforms import Lambda, Compose, Normalize
 from planet_models.densenet_planet import densenet169, densenet121, densenet161, densenet201
 from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet, resnet101_planet, \
     resnet152_planet
+import cv2
+from planet_models.vgg_planet import vgg19_bn_planet
+from planet_models.inception_planet import inception_v3_planet
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from datasets import mean, std
@@ -44,19 +47,27 @@ models = [
             # densenet169,
             # densenet161,
             # resnet152_planet
-            densenet201,
-            resnet101_planet
+            # densenet201,
+            # resnet101_planet
+            vgg19_bn_planet,
+            inception_v3_planet
           ]
 batch_size = [
                 # 128, 128,
                 # 64, 64,
                 # 40, 40,
                 # 50
-                40, 64
+                128, 64
             ]
 
 
-def get_dataloader(batch_size):
+def to299x299(imgs):
+    for img in imgs:
+        img = cv2.resize(img, (299, 299))
+
+
+
+def get_dataloader(batch_size, h=256, w=256):
     train_data = KgForestDataset(
         split='train-37479',
         transform=Compose(
@@ -68,8 +79,8 @@ def get_dataloader(batch_size):
                 Normalize(mean=mean, std=std)
             ]
         ),
-        height=256,
-        width=256
+        height=h,
+        width=w
     )
     train_data_loader = DataLoader(batch_size=batch_size, dataset=train_data, shuffle=True)
 
@@ -84,8 +95,8 @@ def get_dataloader(batch_size):
                 Normalize(mean=mean, std=std)
             ]
         ),
-        height=256,
-        width=256
+        height=h,
+        width=w
     )
 
     valid_dataloader = DataLoader(dataset=validation, shuffle=False, batch_size=batch_size)
@@ -120,10 +131,13 @@ def load_net(net, name):
 
 def train_baselines():
 
-    train_data, val_data = get_dataloader(96)
-
     for model, batch in zip(models, batch_size):
+
         name = str(model).split()[1]
+        if 'inception' in name:
+            train_data, val_data = get_dataloader(batch, h=299, w=299)
+        else:
+            train_data, val_data = get_dataloader(batch)
         print('*****Start Training {} with batch size {}******'.format(name, batch))
         print(' epoch   iter   rate  |  smooth_loss   |  train_loss  (acc)  |  valid_loss  (acc)  | total_train_loss\n')
         logger = Logger('../log/full_data_{}'.format(name), name)
