@@ -10,6 +10,7 @@ import glob
 from planet_models.resnet_planet import resnet18_planet, resnet34_planet, resnet50_planet, resnet101_planet, \
     resnet152_planet
 from planet_models.fpn import fpn_34, fpn_152, fpn_50
+from planet_models.vgg_planet import vgg19_bn_planet
 from planet_models.densenet_planet import densenet161, densenet121, densenet169, densenet201
 from util import predict, f2_score, pred_csv
 from data import kgdataset
@@ -80,7 +81,8 @@ models = [
             # densenet161,
             # densenet169,
             # densenet201,
-            fpn_152,
+            # fpn_152,
+            vgg19_bn_planet
             # fpn_50,
             # fpn_34
         ]
@@ -296,26 +298,26 @@ def predict_test_averaging(t):
 
 
 if __name__ == '__main__':
-    # valid_dataloader = get_validation_loader()
-    test_dataloader = get_test_dataloader()
+    valid_dataloader = get_validation_loader()
+    # test_dataloader = get_test_dataloader()
 
     # save results to files
-    # probabilities = probs(valid_dataloader)
+    probabilities = probs(valid_dataloader)
     #
     # # get threshold
     # model_names = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'densenet121', 'densenet161', 'densenet169', 'densenet201']
     #
-    # for m in [models[0]]:
-    #     name = str(m).split()[1].strip('_planet')
-    #     # file_names = get_files([n for n in model_names if n != name])
-    #     file_names = [f for f in glob.glob('probs/*.txt') if 'fpn_152' in f]
-    #     print('Model {}'.format(file_names))
-    #     t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
-    #     print(list(t))
+    for m in [models[0]]:
+        name = str(m).split()[1].strip('_planet')
+        # file_names = get_files([n for n in model_names if n != name])
+        file_names = [f for f in glob.glob('probs/*.txt') if 'vgg' in f]
+        print('Model {}'.format(file_names))
+        t = do_thresholding(file_names, labels=valid_dataloader.dataset.labels, models=[m])
+        print(list(t))
 
     # average testing
     # predict_test_averaging(thresholds[0])
 
     # majority voting
-    make_test_labels()
+    # make_test_labels()
     # predict_test_majority()
