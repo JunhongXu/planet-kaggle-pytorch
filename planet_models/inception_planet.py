@@ -2,7 +2,7 @@ from torchvision.models.inception import inception_v3, model_urls, model_zoo
 
 
 def inception_v3_planet(pretrained=True):
-    net = inception_v3(num_classes=17, aux_logits=False)
+    net = inception_v3(num_classes=17)
     if pretrained:
         state_dict = net.state_dict()
         pretrained_dict = model_zoo.load_url(model_urls['inception_v3_google'])

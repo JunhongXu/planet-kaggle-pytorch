@@ -185,14 +185,19 @@ def train_baselines():
                 if 'inception' in name:
                     logits, aux_logits = net(Variable(images.cuda()))
                     probs, aux_probs = F.sigmoid(logits), F.sigmoid(aux_logits)
-                    loss = multi_criterion(probs, labels.cuda()), multi_criterion(aux_probs, labels.cuda())
+                    loss = multi_criterion(probs, labels.cuda())
+                    aux_loss = multi_criterion(aux_probs, labels.cuda())
+                    total_loss = aux_loss + loss
                 else:
                     logits = net(Variable(images.cuda()))
                     probs = F.sigmoid(logits)
                     loss = multi_criterion(logits, labels.cuda())
 
                 optimizer.zero_grad()
-                loss.backward()
+                if 'inception' in name:
+                    total_loss.backward()
+                else:
+                    loss.backward()
                 optimizer.step()
 
                 # additional metrics
