@@ -137,7 +137,7 @@ def train_baselines():
         if 'inception' in name:
             train_data, val_data = get_dataloader(batch, h=299, w=299)
         else:
-            train_data, val_data = get_dataloader(batch)
+            train_data, val_data = get_dataloader(batch, h=224, w=224)
         print('*****Start Training {} with batch size {}******'.format(name, batch))
         print(' epoch   iter   rate  |  smooth_loss   |  train_loss  (acc)  |  valid_loss  (acc)  | total_train_loss\n')
         logger = Logger('../log/full_data_{}'.format(name), name)
