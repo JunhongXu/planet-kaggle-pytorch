@@ -43,6 +43,10 @@ def pred_csv(predictions, name, threshold=None):
     """
     csv_name = os.path.join(KAGGLE_DATA_DIR, 'sample_submission.csv')
     submission = pd.read_csv(csv_name)
+    file_idx = sorted([str(i) for i in range(0, 20522)])
+    file_idx = [int(i) for i in file_idx]
+    print(file_idx)
+    idx = 0
     for i, pred in enumerate(predictions):
         if threshold is not None:
             labels = (pred > threshold).astype(int)
@@ -50,7 +54,17 @@ def pred_csv(predictions, name, threshold=None):
             labels = pred
         labels = np.where(labels == 1)[0]
         labels = ' '.join(idx_name()[index] for index in labels)
-        submission['tags'][i] = labels
+        if i < 40669:
+            submission['tags'][i] = labels
+        else:
+            print(file_idx[idx], submission['image_name'][i])
+            labels = (predictions[40669 + file_idx[idx]]).astype(int)
+
+            labels = np.where(labels == 1)[0]
+            labels = ' '.join(idx_name()[index] for index in labels)
+            # print(submission['image_name'][i], file_idx[idx])
+            submission['tags'][i] = labels
+            idx += 1
         # print('Index ', i)
     submission.to_csv(os.path.join('submissions', '{}.csv'.format(name)), index=False)
 
